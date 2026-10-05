@@ -1,0 +1,14 @@
+# Apache — Djumbai URL Rewriting
+# Redireciona todos os pedidos para public/index.php (Front Controller)
+
+Options -Indexes
+Options -MultiViews
+
+RewriteEngine On
+
+# Não reescreve ficheiros e pastas que realmente existem (CSS, JS, imagens)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Tudo o resto vai para o Front Controller
+RewriteRule ^(.*)$ index.php [QSA,L]

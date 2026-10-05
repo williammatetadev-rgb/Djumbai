@@ -1,0 +1,197 @@
+    /* ── Layout Específico do Console Administrativo ── */
+    :root {
+      --admin-sidebar-w: 260px;
+      --admin-header-h: 68px;
+    }
+
+    body.admin-body {
+      background-color: #F3ECE0;
+      color: var(--text-primary);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar */
+    .admin-sidebar {
+      width: var(--admin-sidebar-w);
+      background: #17110C;
+      color: var(--text-on-dark);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 300;
+      transition: transform var(--duration-normal) var(--ease-spring);
+      border-right: 1px solid rgba(255,251,245,0.08);
+    }
+
+    .admin-sidebar__brand {
+      height: var(--admin-header-h);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-inline: 20px;
+      border-bottom: 1px solid rgba(255,251,245,0.08);
+    }
+
+    .admin-sidebar__logo {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--brand-terra);
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px var(--brand-terra-glow);
+    }
+
+    .admin-sidebar__nav {
+      flex: 1;
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+    }
+
+    .admin-sidebar__section-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: rgba(255,251,245,0.4);
+      padding: 16px 12px 6px;
+    }
+
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      color: rgba(255,251,245,0.7);
+      font-size: var(--font-sm);
+      font-weight: 600;
+      transition: all var(--duration-fast) var(--ease-smooth);
+      text-decoration: none;
+    }
+
+    .admin-nav-item:hover {
+      color: #FFF;
+      background: rgba(255,251,245,0.08);
+    }
+
+    .admin-nav-item.is-active {
+      color: #FFF;
+      background: var(--brand-terra);
+      box-shadow: 0 4px 14px var(--brand-terra-glow);
+    }
+
+    .admin-nav-item__left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .admin-sidebar__footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,251,245,0.08);
+      background: rgba(0,0,0,0.25);
+    }
+
+    /* Main Content Canvas */
+    .admin-canvas {
+      flex: 1;
+      margin-left: var(--admin-sidebar-w);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Topbar */
+    .admin-topbar {
+      height: var(--admin-header-h);
+      background: rgba(255,253,249,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 250;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-inline: 28px;
+    }
+
+    .admin-topbar__left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .admin-topbar__toggle {
+      display: none;
+      padding: 6px;
+      border-radius: var(--radius-xs);
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .admin-topbar__right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .admin-user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 12px 4px 4px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+    }
+
+    .admin-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--brand-baia);
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: var(--font-xs);
+    }
+
+    /* Content Area */
+    .admin-content {
+      flex: 1;
+      padding: 28px;
+    }
+
+    @media (max-width: 960px) {
+      .admin-sidebar {
+        transform: translateX(-100%);
+      }
+      .admin-sidebar.is-open {
+        transform: translateX(0);
+      }
+      .admin-canvas {
+        margin-left: 0;
+      }
+      .admin-topbar__toggle {
+        display: flex;
+      }
+      .admin-content {
+        padding: 16px;
+      }
+    }

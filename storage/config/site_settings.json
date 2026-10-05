@@ -1,0 +1,12 @@
+{
+    "nome_site": "Djumbai",
+    "slogan": "Plataforma Cívica Digital de Angola",
+    "email_suporte": "suporte@djumbai.ao",
+    "telefone_emergencia": "+244 923 000 000",
+    "modo_manutencao": false,
+    "aprovacao_automatica": true,
+    "max_reportes_hora": 5,
+    "regras_comunidade": "Respeito mútuo, informações precisas sobre a localização e proibição de linguagem ofensiva.",
+    "atualizado_em": "2026-10-05 16:13:58",
+    "atualizado_por": "Admin Djumbai"
+}

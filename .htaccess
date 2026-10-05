@@ -1,0 +1,31 @@
+# Djumbai — Proteção e Blindagem Raiz do Servidor Apache
+
+# 1. Desativa listagem de diretórios
+Options -Indexes -MultiViews
+
+# 2. Bloqueia acesso direto a arquivos de sistema, logs, configs e backups
+<FilesMatch "^(\.env|\.git|\.htaccess|\.htpasswd|.*\.sql|.*\.log|.*\.md|composer\..*)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 3. Protege diretórios internos da aplicação e redireciona para public/
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /djumbai/
+
+    # Bloqueia acesso direto a pastas internas
+    RewriteRule ^(app|config|database|storage)(/|$) - [F,L]
+
+    # Se já está dentro de /djumbai/public/, não faz nada
+    RewriteCond %{REQUEST_URI} ^/djumbai/public/ [NC]
+    RewriteRule ^ - [L]
+
+    # Redireciona tudo o resto para /djumbai/public/
+    RewriteRule ^(.*)$ /djumbai/public/$1 [R=302,L]
+</IfModule>
