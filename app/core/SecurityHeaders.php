@@ -33,11 +33,11 @@ class SecurityHeaders
         // 6. Content Security Policy (CSP) robusta e compatível com SVGs/CSS locais
         $csp = [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline'",
-            "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: blob:",
+            "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
+            "style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
+            "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://unpkg.com https://cdn.jsdelivr.net",
             "font-src 'self'",
-            "connect-src 'self'",
+            "connect-src 'self' https://*.tile.openstreetmap.org",
             "media-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",

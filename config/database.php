@@ -14,13 +14,14 @@ class Database
     public static function getInstance(): PDO
     {
         if (self::$instance === null) {
-            $host    = Env::get('DB_HOST', 'localhost');
+            $host    = Env::get('DB_HOST', '127.0.0.1');
+            $port    = Env::get('DB_PORT', '3307');
             $dbName  = Env::get('DB_NAME', 'djumbai');
             $user    = Env::get('DB_USER', 'root');
             $pass    = Env::get('DB_PASS', '');
             $charset = Env::get('DB_CHARSET', 'utf8mb4');
 
-            $dsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', $host, $dbName, $charset);
+            $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=%s', $host, $port, $dbName, $charset);
 
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

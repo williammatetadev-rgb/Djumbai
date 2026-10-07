@@ -53,6 +53,80 @@ class ProblemaController extends Controller
         ]);
     }
 
+    /**
+     * Exibe o Mini-Mapa Visual Interativo de Ocorrências
+     */
+    public function mapa(): void
+    {
+        $categoriaId = max(0, (int) ($_GET['categoria'] ?? 0));
+        $estadoId    = max(0, (int) ($_GET['estado']    ?? 0));
+        $provinciaId = max(0, (int) ($_GET['provincia'] ?? 0));
+        $municipioId = max(0, (int) ($_GET['municipio'] ?? 0));
+
+        $pontos     = $this->problemaModel->getPontosMapa($categoriaId, $estadoId, $provinciaId, $municipioId);
+        $categorias = $this->categoriaModel->findAll();
+
+        $db         = Database::getInstance();
+        $provincias = $db->query("SELECT id, nome, latitude, longitude FROM provincias ORDER BY nome ASC")->fetchAll();
+        $municipios = $db->query("SELECT id, nome, provincia_id FROM municipios ORDER BY nome ASC")->fetchAll();
+        $estados    = $db->query("SELECT id, nome, cor FROM estados_problema ORDER BY id ASC")->fetchAll();
+
+        $this->render('problemas/mapa', [
+            'titulo'     => 'Mapa Visual de Ocorrências – Djumbai',
+            'pontos'     => $pontos,
+            'categorias' => $categorias,
+            'provincias' => $provincias,
+            'municipios' => $municipios,
+            'estados'    => $estados,
+            'filtros'    => [
+                'categoria' => $categoriaId,
+                'estado'    => $estadoId,
+                'provincia' => $provinciaId,
+                'municipio' => $municipioId,
+            ],
+        ]);
+    }
+
+    /**
+     * Endpoint API JSON de Pontos para Filtros Interativos do Mapa sem recarregar a página
+     */
+    public function apiPontosMapa(): void
+    {
+        $categoriaId = max(0, (int) ($_GET['categoria'] ?? 0));
+        $estadoId    = max(0, (int) ($_GET['estado']    ?? 0));
+        $provinciaId = max(0, (int) ($_GET['provincia'] ?? 0));
+        $municipioId = max(0, (int) ($_GET['municipio'] ?? 0));
+
+        $pontos = $this->problemaModel->getPontosMapa($categoriaId, $estadoId, $provinciaId, $municipioId);
+
+        $formatados = array_map(function ($p) {
+            return [
+                'id'                 => (int) $p['id'],
+                'titulo'             => $p['titulo'],
+                'descricao'          => $p['descricao'],
+                'foto'               => $p['foto'] ? url('assets/images/uploads/' . $p['foto']) : null,
+                'referencia_local'   => $p['referencia_local'],
+                'criado_em'          => timeAgo($p['criado_em']),
+                'categoria'          => $p['categoria_nome'],
+                'estado'             => $p['estado_nome'],
+                'estado_cor'         => $p['estado_cor'],
+                'bairro'             => $p['bairro_nome'],
+                'municipio'          => $p['municipio_nome'],
+                'provincia'          => $p['provincia_nome'],
+                'total_confirmacoes' => (int) $p['total_confirmacoes'],
+                'lat'                => (float) $p['latitude'],
+                'lng'                => (float) $p['longitude'],
+                'url'                => url('problemas/' . $p['id']),
+            ];
+        }, $pontos);
+
+        $this->json([
+            'sucesso' => true,
+            'total'   => count($formatados),
+            'pontos'  => $formatados,
+        ]);
+    }
+
     public function show(int $id): void
     {
         $id = (int) $id;

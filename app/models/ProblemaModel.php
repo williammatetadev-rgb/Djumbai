@@ -520,5 +520,79 @@ class ProblemaModel extends Model
         $stmt = $this->db->prepare("DELETE FROM comentarios WHERE id = :id");
         return $stmt->execute([':id' => $comentarioId]);
     }
+
+    /**
+     * Retorna ocorrências com coordenadas geográficas para o Mini-Mapa Visual Interativo
+     */
+    public function getPontosMapa(
+        int $categoriaId = 0,
+        int $estadoId = 0,
+        int $provinciaId = 0,
+        int $municipioId = 0
+    ): array {
+        $where = ['1 = 1'];
+        $params = [];
+
+        if ($categoriaId > 0) {
+            $where[] = 'pr.categoria_id = :cat_id';
+            $params[':cat_id'] = $categoriaId;
+        }
+
+        if ($estadoId > 0) {
+            $where[] = 'pr.estado_id = :est_id';
+            $params[':est_id'] = $estadoId;
+        }
+
+        if ($provinciaId > 0) {
+            $where[] = 'p.id = :prov_id';
+            $params[':prov_id'] = $provinciaId;
+        }
+
+        if ($municipioId > 0) {
+            $where[] = 'b.municipio_id = :mun_id';
+            $params[':mun_id'] = $municipioId;
+        }
+
+        $whereClause = implode(' AND ', $where);
+
+        $sql = "
+            SELECT
+                pr.id,
+                pr.titulo,
+                pr.descricao,
+                pr.foto,
+                pr.referencia_local,
+                pr.criado_em,
+                pr.estado_id,
+                pr.categoria_id,
+                COALESCE(pr.latitude, b.latitude, p.latitude, -8.838333) AS latitude,
+                COALESCE(pr.longitude, b.longitude, p.longitude, 13.234444) AS longitude,
+                c.nome              AS categoria_nome,
+                e.nome              AS estado_nome,
+                e.cor               AS estado_cor,
+                b.nome              AS bairro_nome,
+                m.nome              AS municipio_nome,
+                p.nome              AS provincia_nome,
+                COUNT(DISTINCT cf.id) AS total_confirmacoes
+            FROM problemas pr
+            LEFT JOIN categorias      c  ON c.id  = pr.categoria_id
+            LEFT JOIN estados_problema e ON e.id  = pr.estado_id
+            LEFT JOIN bairros         b  ON b.id  = pr.bairro_id
+            LEFT JOIN municipios      m  ON m.id  = b.municipio_id
+            LEFT JOIN provincias      p  ON p.id  = m.provincia_id
+            LEFT JOIN confirmacoes    cf ON cf.problema_id = pr.id
+            WHERE {$whereClause}
+            GROUP BY pr.id
+            ORDER BY total_confirmacoes DESC, pr.criado_em DESC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
 }
 

@@ -129,6 +129,8 @@ $router->post('/perfil/definicoes',          'UserController',     'salvarSettin
 $router->post('/notificacoes/{id}/ler',      'UserController',     'marcarLida');
 
 // ─── Problemas & Comentários (Cidadão) ───────────────────────────
+$router->get( '/mapa',                       'ProblemaController', 'mapa');
+$router->get( '/api/mapa-ocorrencias',       'ProblemaController', 'apiPontosMapa');
 $router->get( '/problemas',                  'ProblemaController', 'index');
 $router->get( '/problemas/{id}',             'ProblemaController', 'show');
 $router->get( '/reportar',                   'ProblemaController', 'criar');

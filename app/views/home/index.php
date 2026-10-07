@@ -150,6 +150,96 @@ $rejeitados = (int) ($panorama['rejeitados'] ?? 0);
   </div>
 </section>
 
+<!-- MINI-MAPA VISUAL DE OCORRÊNCIAS TEASER -->
+<section class="section" style="padding: var(--space-10) 0; background: var(--surface-card); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+  <div class="container">
+    <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap: var(--space-8); align-items: center;">
+      <div>
+        <span class="section-header__kicker" style="color:var(--brand-terra);font-weight:700;">Geolocalização & Transparência Cívica</span>
+        <h2 class="section-header__title" style="margin-top:4px;font-size:1.8rem;">Mini-Mapa Visual de Ocorrências</h2>
+        <p style="color:var(--text-muted); font-size: 0.95rem; margin-top: 12px; line-height: 1.6;">
+          Acompanhe os pontos críticos dos bairros de Luanda (Rangel, Cazenga, Talatona, Sambizanga, Hoji-ya-Henda, Viana...) e províncias. Visualize focos de buracos nas vias, cortes de água, falhas na iluminação e lixo acumulado.
+        </p>
+
+        <div style="margin-top: 24px; display:flex; gap: 12px; flex-wrap: wrap; align-items:center;">
+          <a href="<?= url('mapa') ?>" class="btn btn--primary btn--md">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Abrir Mapa Interativo Completo
+          </a>
+          <span style="font-size: var(--font-xs); color: var(--text-muted);">
+            ⚡ <?= number_format($panorama['total'] ?? 0) ?> pontos assinalados
+          </span>
+        </div>
+      </div>
+
+      <div style="position:relative; border-radius: var(--radius-xl); overflow:hidden; border: 2px solid var(--border-subtle); box-shadow: 0 8px 24px rgba(43,29,20,0.08); background: #E5E3DF; height: 280px;">
+        <div id="home-mini-map-container" style="width:100%; height:100%;"></div>
+        <div style="position:absolute; bottom:12px; right:12px; z-index:1000;">
+          <a href="<?= url('mapa') ?>" class="btn btn--secondary btn--xs" style="background:rgba(255,251,245,0.92);backdrop-filter:blur(4px);box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+            Maximizar Mapa ⤢
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Include Leaflet CSS/JS for Home Teaser -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const homeMapContainer = document.getElementById('home-mini-map-container');
+  if (!homeMapContainer) return;
+
+  const miniMap = L.map('home-mini-map-container', {
+    center: [-8.838333, 13.234444],
+    zoom: 11,
+    zoomControl: false,
+    scrollWheelZoom: false,
+    dragging: true
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap · Djumbai'
+  }).addTo(miniMap);
+
+  fetch('<?= url("api/mapa-ocorrencias") ?>')
+    .then(res => res.json())
+    .then(data => {
+      if (data.sucesso && data.pontos) {
+        const bounds = [];
+        data.pontos.slice(0, 15).forEach(p => {
+          const isCritico = p.total_confirmacoes >= 3 || p.estado_cor === '#D99A1E';
+          const pinHtml = `
+            <div style="width:24px;height:24px;border-radius:50%;background:${p.estado_cor};border:2px solid #FFF;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#FFF;font-size:10px;font-weight:bold;">
+              !
+            </div>
+          `;
+          const icon = L.divIcon({
+            className: 'mini-map-pin',
+            html: pinHtml,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          });
+          const m = L.marker([p.lat, p.lng], { icon: icon }).addTo(miniMap);
+          m.bindPopup(`
+            <div style="font-family:sans-serif;padding:4px;">
+              <strong style="font-size:12px;display:block;margin-bottom:2px;">${p.titulo}</strong>
+              <span style="font-size:11px;color:#666;">📍 ${p.bairro}</span><br>
+              <a href="${p.url}" style="font-size:11px;color:#B4451F;font-weight:bold;margin-top:4px;display:inline-block;">Ver mais →</a>
+            </div>
+          `);
+          bounds.push([p.lat, p.lng]);
+        });
+        if (bounds.length > 0) {
+          miniMap.fitBounds(bounds, { padding: [20, 20], maxZoom: 13 });
+        }
+      }
+    });
+});
+</script>
+
 <!-- PROBLEMAS EM DESTAQUE -->
 <?php if (!empty($destaque)): ?>
 <section class="section" aria-labelledby="destaque-heading">

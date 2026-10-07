@@ -36,6 +36,13 @@
       </div>
     </a>
 
+    <a href="<?= url('mapa') ?>" class="admin-nav-item <?= isCurrentPage('/mapa') ? 'is-active' : '' ?>">
+      <div class="admin-nav-item__left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>Mapa de Ocorrências</span>
+      </div>
+    </a>
+
     <span class="admin-sidebar__section-title">Moderação & Comunidade</span>
     <a href="<?= url('admin/usuarios') ?>" class="admin-nav-item <?= isCurrentPage('/admin/usuarios') ? 'is-active' : '' ?>">
       <div class="admin-nav-item__left">

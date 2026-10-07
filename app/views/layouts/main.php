@@ -30,6 +30,7 @@
         <!-- Cidadão autenticado: sem links públicos na barra de navegação -->
       <?php else: ?>
         <a href="<?= url() ?>"               class="navbar__link <?= isCurrentPage('/') ? 'navbar__link--active' : '' ?>">Início</a>
+        <a href="<?= url('mapa') ?>"          class="navbar__link <?= isCurrentPage('/mapa') ? 'navbar__link--active' : '' ?>">Mapa Visual</a>
         <a href="<?= url('problemas') ?>"    class="navbar__link <?= isCurrentPage('/problemas') ? 'navbar__link--active' : '' ?>">Explorar Reportes</a>
         <a href="<?= url('como-funciona') ?>" class="navbar__link <?= isCurrentPage('/como-funciona') ? 'navbar__link--active' : '' ?>">Como Funciona</a>
       <?php endif; ?>
@@ -40,6 +41,7 @@
         <?php if (isAdmin()): ?>
           <a href="<?= url('admin') ?>" class="btn btn--secondary btn--sm">Painel Admin</a>
         <?php else: ?>
+          <a href="<?= url('mapa') ?>" class="btn btn--ghost btn--sm">Mapa Visual</a>
           <a href="<?= url('problemas') ?>" class="btn btn--ghost btn--sm">Explorar Reportes</a>
         <?php endif; ?>
         <a href="<?= url('logout') ?>" class="btn btn--ghost btn--sm">Sair</a>
@@ -59,6 +61,7 @@
 <div class="mobile-drawer" id="mobileDrawer" role="navigation" aria-label="Menu Mobile">
   <?php if (isLoggedIn() && !isAdmin()): ?>
     <a href="<?= url('perfil') ?>"    class="navbar__link">Meu Painel</a>
+    <a href="<?= url('mapa') ?>"      class="navbar__link">Mapa Visual</a>
     <a href="<?= url('problemas') ?>" class="navbar__link">Explorar Reportes</a>
     <div style="padding-top: var(--space-4); display: flex; flex-direction: column; gap: 8px;">
       <a href="<?= url('reportar') ?>" class="btn btn--primary btn--full">Reportar Problema</a>
@@ -66,6 +69,7 @@
     </div>
   <?php else: ?>
     <a href="<?= url() ?>"            class="navbar__link">Início</a>
+    <a href="<?= url('mapa') ?>"      class="navbar__link">Mapa Visual</a>
     <a href="<?= url('problemas') ?>" class="navbar__link">Explorar Reportes</a>
     <a href="<?= url('como-funciona') ?>" class="navbar__link">Como Funciona</a>
     <div style="padding-top: var(--space-4); display: flex; flex-direction: column; gap: 8px;">

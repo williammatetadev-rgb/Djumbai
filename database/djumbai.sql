@@ -28,8 +28,10 @@ USE djumbai;
 
 -- ── 1. PROVÍNCIAS ──────────────────────────────────────────
 CREATE TABLE provincias (
-  id    TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  nome  VARCHAR(60)      NOT NULL,
+  id        TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nome      VARCHAR(60)      NOT NULL,
+  latitude  DECIMAL(10,8)             DEFAULT NULL,
+  longitude DECIMAL(11,8)             DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_prov_nome (nome)
 ) ENGINE=InnoDB
@@ -58,6 +60,8 @@ CREATE TABLE bairros (
   id           SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
   nome         VARCHAR(80)       NOT NULL,
   municipio_id SMALLINT UNSIGNED NOT NULL,
+  latitude     DECIMAL(10,8)              DEFAULT NULL,
+  longitude    DECIMAL(11,8)              DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_bairro (nome, municipio_id),
   KEY idx_bairro_mun (municipio_id),
@@ -142,6 +146,8 @@ CREATE TABLE problemas (
   categoria_id     TINYINT UNSIGNED  NOT NULL,
   bairro_id        SMALLINT UNSIGNED NOT NULL,
   estado_id        TINYINT UNSIGNED  NOT NULL,
+  latitude         DECIMAL(10,8)              DEFAULT NULL,
+  longitude        DECIMAL(11,8)              DEFAULT NULL,
   criado_em        DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
   resolvido_em     DATETIME                   DEFAULT NULL,
   PRIMARY KEY (id),
