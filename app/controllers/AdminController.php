@@ -24,12 +24,24 @@ class AdminController extends Controller
 
     public function dashboard(): void
     {
-        $panorama               = $this->problemaModel->getPanorama();
+        $periodo = sanitizeString($_GET['periodo'] ?? 'todos');
+        if (!in_array($periodo, ['todos', 'hoje', '7dias', '30dias'], true)) {
+            $periodo = 'todos';
+        }
+
+        $panorama               = $this->problemaModel->getPanorama($periodo);
+        $metricasSLA            = $this->problemaModel->getMetricasSLA();
+        $ocorrenciasCriticas    = $this->problemaModel->getOcorrenciasCriticas(5);
+        $pontosMapa             = $this->problemaModel->getPontosMapa(0, 0, 0, 0);
         $recentes               = $this->problemaModel->listar(0, 0, 8, 0);
         $distribuicaoCategorias = $this->problemaModel->getDistribuicaoCategorias();
         $distribuicaoMunicipios = $this->problemaModel->getDistribuicaoMunicipios(5);
         $historicoAuditoria     = $this->problemaModel->getHistoricoAuditoriaRecente(6);
         $totalUtilizadores      = $this->userModel->count();
+
+        // Lista de estados para o modal de despacho rápido
+        $db = Database::getInstance();
+        $estados = $db->query("SELECT id, nome, cor FROM estados_problema ORDER BY id ASC")->fetchAll();
 
         // Taxa de resolução
         $total = (int) ($panorama['total'] ?? 0);
@@ -37,8 +49,13 @@ class AdminController extends Controller
         $taxaResolucao = $total > 0 ? round(($resolvidos / $total) * 100, 1) : 0;
 
         $this->render('admin/dashboard', [
-            'titulo'                 => 'Painel Admin – Djumbai',
+            'titulo'                 => 'Painel de Despacho & Inteligência – Djumbai Admin',
+            'periodo'                => $periodo,
             'panorama'               => $panorama,
+            'metricasSLA'            => $metricasSLA,
+            'ocorrenciasCriticas'    => $ocorrenciasCriticas,
+            'pontosMapa'             => $pontosMapa,
+            'estados'                => $estados,
             'taxaResolucao'          => $taxaResolucao,
             'recentes'               => $recentes,
             'distribuicaoCategorias' => $distribuicaoCategorias,
@@ -86,30 +103,85 @@ class AdminController extends Controller
     {
         $categoriaId = (int) ($_GET['categoria'] ?? 0);
         $estadoId    = (int) ($_GET['estado']    ?? 0);
+        $municipioId = (int) ($_GET['municipio'] ?? 0);
+        $busca       = sanitizeString($_GET['q'] ?? '');
+        $ordem       = sanitizeString($_GET['ordem'] ?? 'recentes');
         $pagina      = max(1, (int) ($_GET['pagina'] ?? 1));
-        $limite      = 12;
+        $limite      = 20;
         $offset      = ($pagina - 1) * $limite;
 
-        $problemas  = $this->problemaModel->listar($categoriaId, $estadoId, $limite, $offset);
-        $total      = $this->problemaModel->totalFiltrado($categoriaId, $estadoId);
+        $problemas  = $this->problemaModel->listar($categoriaId, $estadoId, $limite, $offset, $busca, $municipioId, $ordem);
+        $total      = $this->problemaModel->totalFiltrado($categoriaId, $estadoId, $busca, $municipioId);
         $categorias = $this->categoriaModel->findAll();
 
-        $db      = Database::getInstance();
-        $estados = $db->query("SELECT id, nome, cor FROM estados_problema ORDER BY id ASC")->fetchAll();
+        $db         = Database::getInstance();
+        $estados    = $db->query("SELECT id, nome, cor FROM estados_problema ORDER BY id ASC")->fetchAll();
+        $municipios = $db->query("SELECT id, nome FROM municipios ORDER BY nome ASC")->fetchAll();
+
+        // Contagens globais para os cartões de KPI
+        $kpiPendentes  = (int) $db->query("SELECT COUNT(*) FROM problemas WHERE estado_id = 1")->fetchColumn();
+        $kpiAnalise    = (int) $db->query("SELECT COUNT(*) FROM problemas WHERE estado_id = 2")->fetchColumn();
+        $kpiResolvidos = (int) $db->query("SELECT COUNT(*) FROM problemas WHERE estado_id = 3")->fetchColumn();
+        $kpiTotalGeral = (int) $db->query("SELECT COUNT(*) FROM problemas")->fetchColumn();
 
         $this->render('admin/problemas', [
-            'titulo'       => 'Gestão de Ocorrências – Djumbai',
-            'problemas'    => $problemas,
-            'categorias'   => $categorias,
-            'estados'      => $estados,
-            'categoriaId'  => $categoriaId,
-            'estadoId'     => $estadoId,
-            'pagina'       => $pagina,
-            'porPagina'    => $limite,
-            'totalPaginas' => (int) ceil($total / ($limite ?: 1)),
-            'total'        => $total,
-            'filtros'      => ['categoria' => $categoriaId, 'estado' => $estadoId],
+            'titulo'        => 'Gestão de Ocorrências – Djumbai Admin',
+            'problemas'     => $problemas,
+            'categorias'    => $categorias,
+            'estados'       => $estados,
+            'municipios'    => $municipios,
+            'categoriaId'   => $categoriaId,
+            'estadoId'      => $estadoId,
+            'municipioId'   => $municipioId,
+            'busca'         => $busca,
+            'ordem'         => $ordem,
+            'pagina'        => $pagina,
+            'porPagina'     => $limite,
+            'totalPaginas'  => (int) ceil($total / ($limite ?: 1)),
+            'total'         => $total,
+            'kpis'          => [
+                'total'      => $kpiTotalGeral,
+                'pendentes'  => $kpiPendentes,
+                'analise'    => $kpiAnalise,
+                'resolvidos' => $kpiResolvidos,
+            ],
+            'filtros'       => [
+                'categoria' => $categoriaId,
+                'estado'    => $estadoId,
+                'municipio' => $municipioId,
+                'q'         => $busca,
+                'ordem'     => $ordem,
+            ],
         ], 'admin');
+    }
+
+    public function eliminarProblema(int $id): void
+    {
+        if (!verifyCsrf()) {
+            flash('error', 'Token de segurança inválido.');
+            $this->redirect('/admin/problemas');
+        }
+
+        $problema = $this->problemaModel->findById($id);
+        if (!$problema) {
+            flash('error', 'Ocorrência não encontrada.');
+            $this->redirect('/admin/problemas');
+        }
+
+        $sucesso = $this->problemaModel->eliminarProblema($id);
+
+        if ($sucesso) {
+            SecurityLogger::log('ADMIN_PROBLEM_DELETED', "Ocorrência #{$id} eliminada por moderação", [
+                'problema_id' => $id,
+                'titulo'      => $problema['titulo'],
+                'admin_id'    => $_SESSION['user_id']
+            ]);
+            flash('success', "Ocorrência '{$problema['titulo']}' eliminada com sucesso.");
+        } else {
+            flash('error', 'Não foi possível eliminar a ocorrência.');
+        }
+
+        $this->redirect('/admin/problemas');
     }
 
     public function mudarEstado(int $id): void
@@ -164,7 +236,9 @@ class AdminController extends Controller
         ]);
 
         flash('success', "Estado da ocorrência '{$problema['titulo']}' actualizado com sucesso.");
-        $this->redirect('/admin/problemas');
+        $origem = sanitizeString($_POST['origem'] ?? '');
+        $destino = ($origem === 'dashboard') ? '/admin' : '/admin/problemas';
+        $this->redirect($destino);
     }
 
     // ── GESTÃO DE UTILIZADORES & MODERAÇÃO DE BONS MODOS ──────────────────
@@ -321,9 +395,9 @@ class AdminController extends Controller
         $comentarios = $this->problemaModel->listarTodosComentarios();
 
         $this->render('admin/comentarios', [
-            'titulo'      => 'Moderação de Comentários – Djumbai',
+            'titulo'      => 'Moderação de Comentários – Djumbai Admin',
             'comentarios' => $comentarios,
-        ], 'admin');
+        ], 'admin_comentarios');
     }
 
     public function eliminarComentario(int $id): void

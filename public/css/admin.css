@@ -220,4 +220,35 @@
       .mapa-layout {
         grid-template-columns: 1fr !important;
       }
+    }
+
+    /* ═════════════════════════════════════════════════════════════════════
+       REGRA GLOBAL DE MODAIS & POP-UPS NO ADMIN: OCULTAÇÃO DE SCROLLBARS
+       ═════════════════════════════════════════════════════════════════════ */
+    .no-scrollbar,
+    .modal-body,
+    .modal-content,
+    [id*="Modal"] > div,
+    [id*="modal"] > div,
+    [class*="modal"] > div,
+    [class*="popup"] > div,
+    .modal-container,
+    .drawer-content {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    .no-scrollbar::-webkit-scrollbar,
+    .modal-body::-webkit-scrollbar,
+    .modal-content::-webkit-scrollbar,
+    [id*="Modal"] > div::-webkit-scrollbar,
+    [id*="modal"] > div::-webkit-scrollbar,
+    [class*="modal"] > div::-webkit-scrollbar,
+    [class*="popup"] > div::-webkit-scrollbar,
+    .modal-container::-webkit-scrollbar,
+    .drawer-content::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
     }

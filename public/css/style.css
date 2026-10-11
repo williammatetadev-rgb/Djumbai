@@ -125,6 +125,17 @@ img, svg { display: block; max-width: 100%; }
 button, input, select, textarea { font-family: inherit; font-size: inherit; }
 button { cursor: pointer; border: none; background: none; }
 
+/* Utilitário para ocultar barra de scroll mantendo funcionalidade de rolagem */
+.no-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 /* ── 3. CONTAINER LAYOUT ────────────────────────────────── */
 .container {
   width: 100%;
@@ -1317,4 +1328,36 @@ button { cursor: pointer; border: none; background: none; }
     width: auto;
     max-width: none;
   }
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   REGRA GLOBAL DE MODAIS & POP-UPS: OCULTAÇÃO TOTAL DE BARRAS DE SCROLL
+   Mantém a rolagem fluida e invisibiliza qualquer scrollbar cinzenta.
+   ═════════════════════════════════════════════════════════════════════ */
+.no-scrollbar,
+.modal-body,
+.modal-content,
+[id*="Modal"] > div,
+[id*="modal"] > div,
+[class*="modal"] > div,
+[class*="popup"] > div,
+.modal-container,
+.drawer-content {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE e Edge legado */
+}
+
+.no-scrollbar::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar,
+[id*="Modal"] > div::-webkit-scrollbar,
+[id*="modal"] > div::-webkit-scrollbar,
+[class*="modal"] > div::-webkit-scrollbar,
+[class*="popup"] > div::-webkit-scrollbar,
+.modal-container::-webkit-scrollbar,
+.drawer-content::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera, Edge moderno */
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }

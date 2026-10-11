@@ -167,14 +167,16 @@ class ProblemaController extends Controller
     {
         $this->requireAuth();
 
-        // Verificar se o cidadão concluiu a verificação de Bilhete de Identidade (BI)
-        $userId = (int) $_SESSION['user_id'];
-        $userModel = new UserModel();
-        $user = $userModel->findById($userId);
+        // Verificar se o cidadão concluiu a verificação de BI (aplica-se apenas a cidadãos comuns; admin tem total liberdade)
+        if (!isAdmin()) {
+            $userId = (int) $_SESSION['user_id'];
+            $userModel = new UserModel();
+            $user = $userModel->findById($userId);
 
-        if (!$user || empty($user['bi_frente']) || empty($user['bi_verso'])) {
-            flash('error', 'Para reportar um problema é necessário terminar a verificação do seu Bilhete de Identidade (BI). Por favor, conclua a verificação nas suas definições.');
-            $this->redirect('/perfil/definicoes');
+            if (!$user || empty($user['bi_frente']) || empty($user['bi_verso'])) {
+                flash('error', 'Para reportar um problema é necessário terminar a verificação do seu Bilhete de Identidade (BI). Por favor, conclua a verificação nas suas definições.');
+                $this->redirect('/perfil/definicoes');
+            }
         }
 
         $categorias = $this->categoriaModel->findAll();
@@ -193,14 +195,16 @@ class ProblemaController extends Controller
     {
         $this->requireAuth();
 
-        // Verificar se o cidadão concluiu a verificação de Bilhete de Identidade (BI)
-        $userId = (int) $_SESSION['user_id'];
-        $userModel = new UserModel();
-        $user = $userModel->findById($userId);
+        // Verificar se o cidadão concluiu a verificação de BI (aplica-se apenas a cidadãos comuns; admin tem total liberdade)
+        if (!isAdmin()) {
+            $userId = (int) $_SESSION['user_id'];
+            $userModel = new UserModel();
+            $user = $userModel->findById($userId);
 
-        if (!$user || empty($user['bi_frente']) || empty($user['bi_verso'])) {
-            flash('error', 'Para reportar um problema é necessário terminar a verificação do seu Bilhete de Identidade (BI). Por favor, conclua a verificação nas suas definições.');
-            $this->redirect('/perfil/definicoes');
+            if (!$user || empty($user['bi_frente']) || empty($user['bi_verso'])) {
+                flash('error', 'Para reportar um problema é necessário terminar a verificação do seu Bilhete de Identidade (BI). Por favor, conclua a verificação nas suas definições.');
+                $this->redirect('/perfil/definicoes');
+            }
         }
 
         // 1. Rate limiting de criação para evitar spam de reportes (definido nas configurações)

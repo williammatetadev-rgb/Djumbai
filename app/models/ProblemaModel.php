@@ -55,15 +55,19 @@ class ProblemaModel extends Model
 
         $sql = "
             SELECT
-                pr.id, pr.titulo, pr.foto, pr.referencia_local, pr.criado_em,
+                pr.id, pr.titulo, pr.descricao, pr.foto, pr.referencia_local, pr.criado_em,
                 pr.estado_id, pr.categoria_id, pr.user_id,
+                COALESCE(pr.latitude, b.latitude, -8.838333) AS latitude,
+                COALESCE(pr.longitude, b.longitude, 13.234444) AS longitude,
                 u.nome              AS autor_nome,
+                u.email             AS autor_email,
                 c.nome              AS categoria_nome,
                 e.nome              AS estado_nome,
                 e.cor               AS estado_cor,
                 b.nome              AS bairro_nome,
                 m.nome              AS municipio_nome,
-                COUNT(DISTINCT cf.id) AS total_confirmacoes
+                COUNT(DISTINCT cf.id) AS total_confirmacoes,
+                COUNT(DISTINCT com.id) AS total_comentarios
             FROM problemas pr
             LEFT JOIN user            u  ON u.id  = pr.user_id
             LEFT JOIN categorias      c  ON c.id  = pr.categoria_id
@@ -71,6 +75,7 @@ class ProblemaModel extends Model
             LEFT JOIN bairros         b  ON b.id  = pr.bairro_id
             LEFT JOIN municipios      m  ON m.id  = b.municipio_id
             LEFT JOIN confirmacoes    cf ON cf.problema_id = pr.id
+            LEFT JOIN comentarios     com ON com.problema_id = pr.id
             WHERE {$whereClause}
             GROUP BY pr.id
             ORDER BY {$orderBy}
@@ -208,17 +213,28 @@ class ProblemaModel extends Model
 
     /**
      * Panorama geral de estatísticas (para homepage e dashboard admin)
+     * Suporta filtro temporal: 'todos', 'hoje', '7dias', '30dias'
      */
-    public function getPanorama(): array
+    public function getPanorama(string $periodo = 'todos'): array
     {
+        $where = '1 = 1';
+        if ($periodo === 'hoje') {
+            $where = 'DATE(criado_em) = CURDATE()';
+        } elseif ($periodo === '7dias') {
+            $where = 'criado_em >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+        } elseif ($periodo === '30dias') {
+            $where = 'criado_em >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+        }
+
         $stmt = $this->db->query("
             SELECT
-                SUM(estado_id = 1) AS pendentes,
-                SUM(estado_id = 2) AS em_analise,
-                SUM(estado_id = 3) AS resolvidos,
-                SUM(estado_id = 4) AS rejeitados,
-                COUNT(*)           AS total
+                COALESCE(SUM(estado_id = 1), 0) AS pendentes,
+                COALESCE(SUM(estado_id = 2), 0) AS em_analise,
+                COALESCE(SUM(estado_id = 3), 0) AS resolvidos,
+                COALESCE(SUM(estado_id = 4), 0) AS rejeitados,
+                COUNT(*)                        AS total
             FROM problemas
+            WHERE {$where}
         ");
         return $stmt->fetch() ?: [
             'pendentes'  => 0,
@@ -228,6 +244,95 @@ class ProblemaModel extends Model
             'total'      => 0,
         ];
     }
+
+    /**
+     * Métricas operacionais e SLA de atendimento municipal
+     */
+    public function getMetricasSLA(): array
+    {
+        // 1. Tempo médio de resolução (dias)
+        $stmtResolucao = $this->db->query("
+            SELECT 
+                ROUND(AVG(DATEDIFF(COALESCE(resolvido_em, NOW()), criado_em)), 1) AS media_dias,
+                COUNT(*) AS total_resolvidos
+            FROM problemas 
+            WHERE estado_id = 3 AND resolvido_em IS NOT NULL
+        ");
+        $slaResolucao = $stmtResolucao->fetch() ?: [];
+
+        // 2. Tempo médio até o primeiro despacho da equipa técnica (horas)
+        $stmtDespacho = $this->db->query("
+            SELECT 
+                ROUND(AVG(TIMESTAMPDIFF(HOUR, pr.criado_em, h.primeiro_despacho)), 1) AS media_horas_despacho
+            FROM problemas pr
+            JOIN (
+                SELECT problema_id, MIN(criado_em) AS primeiro_despacho
+                FROM historico_estados
+                GROUP BY problema_id
+            ) h ON h.problema_id = pr.id
+        ");
+        $slaDespacho = $stmtDespacho->fetch() ?: [];
+
+        // 3. Novas ocorrências registadas hoje
+        $stmtHoje = $this->db->query("
+            SELECT COUNT(*) FROM problemas WHERE DATE(criado_em) = CURDATE()
+        ");
+        $novosHoje = (int) $stmtHoje->fetchColumn();
+
+        // 4. Ocorrências com atraso crítico (pendentes há mais de 3 dias)
+        $stmtAtrasados = $this->db->query("
+            SELECT COUNT(*) FROM problemas 
+            WHERE estado_id = 1 AND criado_em <= DATE_SUB(NOW(), INTERVAL 3 DAY)
+        ");
+        $atrasados = (int) $stmtAtrasados->fetchColumn();
+
+        return [
+            'media_dias_resolucao' => (float) ($slaResolucao['media_dias'] ?? 0),
+            'total_resolvidos'     => (int) ($slaResolucao['total_resolvidos'] ?? 0),
+            'media_horas_despacho' => (float) ($slaDespacho['media_horas_despacho'] ?? 0),
+            'novos_hoje'           => $novosHoje,
+            'atrasados_criticos'   => $atrasados,
+        ];
+    }
+
+    /**
+     * Ocorrências que demandam atenção crítica e intervenção prioritária
+     */
+    public function getOcorrenciasCriticas(int $limite = 5): array
+    {
+        $sql = "
+            SELECT
+                pr.id, pr.titulo, pr.descricao, pr.foto, pr.criado_em,
+                pr.estado_id, pr.categoria_id,
+                DATEDIFF(NOW(), pr.criado_em) AS dias_aberto,
+                b.nome  AS bairro_nome,
+                m.nome  AS municipio_nome,
+                c.nome  AS categoria_nome,
+                e.nome  AS estado_nome,
+                e.cor   AS estado_cor,
+                COUNT(DISTINCT cf.id) AS total_confirmacoes,
+                CASE
+                    WHEN pr.estado_id = 1 AND DATEDIFF(NOW(), pr.criado_em) >= 5 THEN 'sla_estourado'
+                    WHEN COUNT(DISTINCT cf.id) >= 2 THEN 'surto_popular'
+                    ELSE 'atencao'
+                END AS motivo_alerta
+            FROM problemas pr
+            LEFT JOIN categorias       c  ON c.id  = pr.categoria_id
+            LEFT JOIN estados_problema  e  ON e.id  = pr.estado_id
+            LEFT JOIN bairros          b  ON b.id  = pr.bairro_id
+            LEFT JOIN municipios       m  ON m.id  = b.municipio_id
+            LEFT JOIN confirmacoes     cf ON cf.problema_id = pr.id
+            WHERE pr.estado_id IN (1, 2)
+            GROUP BY pr.id
+            ORDER BY total_confirmacoes DESC, dias_aberto DESC
+            LIMIT :limite
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
 
     /**
      * Comentários de um problema ordenados cronologicamente e agrupados com respostas
@@ -500,13 +605,19 @@ class ProblemaModel extends Model
         $stmt = $this->db->query("
             SELECT
                 c.id, c.texto, c.criado_em, c.problema_id, c.user_id,
-                u.nome  AS autor_nome,
-                u.email AS autor_email,
+                u.nome   AS autor_nome,
+                u.email  AS autor_email,
+                u.telefone AS autor_telefone,
                 u.status AS autor_status,
-                p.titulo AS problema_titulo
+                u.bi_frente, u.bi_verso,
+                p.titulo AS problema_titulo,
+                b.nome   AS bairro_nome,
+                cat.nome AS categoria_nome
             FROM comentarios c
             JOIN user u ON u.id = c.user_id
             JOIN problemas p ON p.id = c.problema_id
+            LEFT JOIN bairros b ON b.id = p.bairro_id
+            LEFT JOIN categorias cat ON cat.id = p.categoria_id
             ORDER BY c.criado_em DESC
         ");
         return $stmt->fetchAll();
@@ -593,6 +704,31 @@ class ProblemaModel extends Model
         $stmt->execute();
 
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Elimina uma ocorrência e todas as suas dependências associadas
+     */
+    public function eliminarProblema(int $id): bool
+    {
+        try {
+            $this->db->beginTransaction();
+
+            $this->db->prepare("DELETE FROM confirmacoes WHERE problema_id = :id")->execute([':id' => $id]);
+            $this->db->prepare("DELETE FROM comentarios WHERE problema_id = :id")->execute([':id' => $id]);
+            $this->db->prepare("DELETE FROM notificacoes WHERE problema_id = :id")->execute([':id' => $id]);
+            $this->db->prepare("DELETE FROM historico_estados WHERE problema_id = :id")->execute([':id' => $id]);
+            $res = $this->db->prepare("DELETE FROM problemas WHERE id = :id")->execute([':id' => $id]);
+
+            $this->db->commit();
+            return $res;
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            SecurityLogger::log('DELETE_PROBLEM_ERROR', $e->getMessage(), ['problema_id' => $id]);
+            return false;
+        }
     }
 }
 

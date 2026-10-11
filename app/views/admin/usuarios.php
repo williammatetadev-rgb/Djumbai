@@ -259,6 +259,11 @@ $totalOnline   = count(array_filter($cidadaos, fn($u) => !empty($u['ultimo_acess
 <style>
 @keyframes scaleUp{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
 </style>
 <script>
 const warnPresets = {
@@ -381,7 +386,7 @@ document.getElementById('userDetailsModal').addEventListener('click', function(e
 
 <!-- ══ MODAL: DETALHES COMPLETOS DO UTILIZADOR ═══════════════════════ -->
 <div id="userDetailsModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,10,8,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
-  <div style="background:var(--surface-card);max-width:620px;width:92%;max-height:90vh;overflow-y:auto;border-radius:18px;box-shadow:0 32px 64px rgba(0,0,0,0.3);border:1px solid var(--border-subtle);animation:scaleUp 0.35s cubic-bezier(0.16,1,0.3,1);">
+  <div class="no-scrollbar" style="background:var(--surface-card);max-width:620px;width:92%;max-height:90vh;overflow-y:auto;border-radius:18px;box-shadow:0 32px 64px rgba(0,0,0,0.3);border:1px solid var(--border-subtle);animation:scaleUp 0.35s cubic-bezier(0.16,1,0.3,1);scrollbar-width:none;-ms-overflow-style:none;">
 
     <!-- Cabeçalho -->
     <div style="background:linear-gradient(135deg,#1A1410,#2D221A);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--brand-terra);">

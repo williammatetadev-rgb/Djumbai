@@ -147,6 +147,7 @@ $router->get( '/admin',                          'AdminController',    'dashboar
 $router->get( '/admin/mapa',                     'AdminController',    'mapa');
 $router->get( '/admin/problemas',                'AdminController',    'problemas');
 $router->post('/admin/problemas/{id}/estado',     'AdminController',    'mudarEstado');
+$router->post('/admin/problemas/{id}/eliminar',   'AdminController',    'eliminarProblema');
 $router->get( '/admin/usuarios',                 'AdminController',    'usuarios');
 $router->get( '/admin/usuarios/{id}/documento/{tipo}', 'AdminController', 'verDocumento');
 $router->post('/admin/usuarios/{id}/banir',      'AdminController',    'toggleBan');

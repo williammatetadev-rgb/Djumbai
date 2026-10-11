@@ -173,7 +173,7 @@
 
 <!-- ══ MODAL: TERMINAR A VERIFICAÇÃO DO BI (UPLOAD OU SCANNER) ════════ -->
 <div id="biVerifyModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,10,8,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
-  <div style="background:var(--surface-card);max-width:560px;width:100%;max-height:92vh;overflow-y:auto;border-radius:18px;box-shadow:0 32px 64px rgba(0,0,0,0.35);border:1px solid var(--border-subtle);animation:scaleUp 0.3s cubic-bezier(0.16,1,0.3,1);">
+  <div class="no-scrollbar" style="background:var(--surface-card);max-width:560px;width:100%;max-height:92vh;overflow-y:auto;border-radius:18px;box-shadow:0 32px 64px rgba(0,0,0,0.35);border:1px solid var(--border-subtle);animation:scaleUp 0.3s cubic-bezier(0.16,1,0.3,1);scrollbar-width:none;-ms-overflow-style:none;">
 
     <!-- Header do Modal -->
     <div style="background:linear-gradient(135deg,#1A1410,#2D221A);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--brand-terra);">
@@ -481,3 +481,11 @@ function closeBiVerifyModal() {
   document.getElementById('biVerifyModal').style.display = 'none';
 }
 </script>
+
+<style>
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+</style>
