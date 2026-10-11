@@ -130,7 +130,7 @@ class UserModel extends Model
     {
         $stmt = $this->db->prepare("
             SELECT
-                u.id, u.nome, u.email, u.telefone, u.tipo, u.status, u.ultimo_acesso, u.criado_em,
+                u.id, u.nome, u.email, u.telefone, u.bi_frente, u.bi_verso, u.tipo, u.status, u.ultimo_acesso, u.criado_em,
                 b.nome  AS bairro,
                 m.nome  AS municipio,
                 p.nome  AS provincia,
@@ -157,7 +157,7 @@ class UserModel extends Model
     {
         $stmt = $this->db->query("
             SELECT
-                u.id, u.nome, u.email, u.telefone, u.tipo, u.status, u.ultimo_acesso, u.criado_em,
+                u.id, u.nome, u.email, u.telefone, u.bi_frente, u.bi_verso, u.tipo, u.status, u.ultimo_acesso, u.criado_em,
                 b.nome AS bairro_nome,
                 m.nome AS municipio_nome,
                 COUNT(DISTINCT pr.id)  AS total_reportes,
@@ -221,5 +221,18 @@ class UserModel extends Model
             SecurityLogger::log('USER_DELETE_ERROR', $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Atualiza os documentos de identificação (BI Frente e Verso) do utilizador
+     */
+    public function atualizarDocumentosBI(int $userId, string $biFrente, string $biVerso): bool
+    {
+        $stmt = $this->db->prepare("UPDATE user SET bi_frente = :frente, bi_verso = :verso WHERE id = :id");
+        return $stmt->execute([
+            ':frente' => $biFrente,
+            ':verso'  => $biVerso,
+            ':id'     => $userId,
+        ]);
     }
 }

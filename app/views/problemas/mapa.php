@@ -654,7 +654,7 @@ document.addEventListener('DOMContentLoaded', function () {
               📍 <strong>${p.bairro}</strong>${p.municipio ? ', ' + p.municipio : ''}<br>
               💬 ${p.total_confirmacoes} confirmações comunitárias
             </div>
-            <a href="${p.url}" class="mapa-popup__btn">Ver Detalhes do Reporte →</a>
+            <a href="${p.url}" class="mapa-popup__btn">Ver Detalhes do Reporte</a>
           </div>
         `;
         marker.bindPopup(popupHtml);

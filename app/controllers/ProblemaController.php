@@ -5,6 +5,7 @@
 
 require_once APP_PATH . '/Models/ProblemaModel.php';
 require_once APP_PATH . '/Models/CategoriaModel.php';
+require_once APP_PATH . '/Models/UserModel.php';
 
 class ProblemaController extends Controller
 {
@@ -166,6 +167,16 @@ class ProblemaController extends Controller
     {
         $this->requireAuth();
 
+        // Verificar se o cidadão concluiu a verificação de Bilhete de Identidade (BI)
+        $userId = (int) $_SESSION['user_id'];
+        $userModel = new UserModel();
+        $user = $userModel->findById($userId);
+
+        if (!$user || empty($user['bi_frente']) || empty($user['bi_verso'])) {
+            flash('error', 'Para reportar um problema é necessário terminar a verificação do seu Bilhete de Identidade (BI). Por favor, conclua a verificação nas suas definições.');
+            $this->redirect('/perfil/definicoes');
+        }
+
         $categorias = $this->categoriaModel->findAll();
         $db         = Database::getInstance();
         $provincias = $db->query("SELECT id, nome FROM provincias ORDER BY nome ASC")->fetchAll();
@@ -181,6 +192,16 @@ class ProblemaController extends Controller
     public function guardar(): void
     {
         $this->requireAuth();
+
+        // Verificar se o cidadão concluiu a verificação de Bilhete de Identidade (BI)
+        $userId = (int) $_SESSION['user_id'];
+        $userModel = new UserModel();
+        $user = $userModel->findById($userId);
+
+        if (!$user || empty($user['bi_frente']) || empty($user['bi_verso'])) {
+            flash('error', 'Para reportar um problema é necessário terminar a verificação do seu Bilhete de Identidade (BI). Por favor, conclua a verificação nas suas definições.');
+            $this->redirect('/perfil/definicoes');
+        }
 
         // 1. Rate limiting de criação para evitar spam de reportes (definido nas configurações)
         $maxReportes = (int) siteSetting('max_reportes_hora', 10);

@@ -280,6 +280,40 @@ class AdminController extends Controller
         $this->redirect('/admin/usuarios');
     }
 
+    /**
+     * Visualização segura de documento de identificação (BI) por administradores
+     */
+    public function verDocumento(int $id, string $tipo): void
+    {
+        $user = $this->userModel->findById($id);
+        if (!$user) {
+            http_response_code(404);
+            die('Utilizador não encontrado.');
+        }
+
+        $arquivo = ($tipo === 'frente') ? ($user['bi_frente'] ?? null) : ($user['bi_verso'] ?? null);
+        if (empty($arquivo)) {
+            http_response_code(404);
+            die('Documento não disponível.');
+        }
+
+        $caminho = ROOT_PATH . '/storage/uploads/' . $arquivo;
+        if (!file_exists($caminho)) {
+            http_response_code(404);
+            die('Ficheiro de documento não encontrado no armazenamento.');
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $caminho);
+        finfo_close($finfo);
+
+        header('Content-Type: ' . ($mime ?: 'application/octet-stream'));
+        header('Content-Length: ' . filesize($caminho));
+        header('Cache-Control: private, max-age=3600');
+        readfile($caminho);
+        exit;
+    }
+
     // ── MODERAÇÃO DE COMENTÁRIOS E RECLAMAÇÕES ──────────────────────────
 
     public function comentarios(): void

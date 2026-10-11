@@ -191,7 +191,7 @@
 
           <!-- Botão Continuar Passo 1 -->
           <button type="button" class="btn btn--primary btn--full btn--lg" id="btnGoToStep2" style="margin-top: 24px;">
-            Continuar para Documentos &rarr;
+            Continuar para Documentos
           </button>
 
         </div>
@@ -252,10 +252,10 @@
           <!-- Botões de Navegação Passo 2 -->
           <div style="display: flex; gap: 10px;">
             <button type="button" class="btn btn--secondary btn--lg" id="btnBackToStep1" style="flex: 1;">
-              &larr; Voltar
+              Voltar
             </button>
             <button type="button" class="btn btn--primary btn--lg" id="btnGoToStep3" style="flex: 2;">
-              Submeter BI e Continuar &rarr;
+              Submeter BI e Continuar
             </button>
           </div>
 
@@ -376,7 +376,7 @@
           <!-- Botões de Navegação Passo 3 -->
           <div style="display: flex; gap: 10px; margin-top: 20px;">
             <button type="button" class="btn btn--secondary btn--lg" id="btnBackToStep2" style="flex: 1;">
-              &larr; Voltar
+              Voltar
             </button>
             <button type="submit" class="btn btn--primary btn--lg" id="btnSubmitCadastro" style="flex: 2;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>

@@ -27,13 +27,64 @@
           Definições de Perfil
         </h1>
         <p style="font-size: 13px; color: var(--text-muted); margin: 2px 0 0;">
-          Atualize os seus dados pessoais de contacto na plataforma Djumbai.
+          Atualize os seus dados pessoais de contacto e verificação cívica na plataforma Djumbai.
         </p>
       </div>
     </div>
   </div>
 
-  <!-- Card das Definições -->
+  <?php
+    $temBi = !empty($perfil['bi_frente']) && !empty($perfil['bi_verso']);
+  ?>
+
+  <!-- ══ CARD DE VERIFICAÇÃO DO BILHETE DE IDENTIDADE (BI) ═══════════ -->
+  <div style="background: var(--surface-card); border: 1px solid <?= $temBi ? 'rgba(76,175,80,0.3)' : 'rgba(217,154,30,0.35)' ?>; border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 5px; background: <?= $temBi ? '#4CAF50' : 'var(--brand-dendem)' ?>;"></div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: <?= $temBi ? 'rgba(76,175,80,0.1)' : 'rgba(217,154,30,0.12)' ?>; display: flex; align-items: center; justify-content: center; color: <?= $temBi ? '#4CAF50' : 'var(--brand-dendem)' ?>; flex-shrink: 0;">
+          <?php if ($temBi): ?>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <?php else: ?>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><line x1="15" y1="8" x2="17" y2="8"/><line x1="15" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+          <?php endif; ?>
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+            <strong style="font-size: 1rem; color: var(--text-primary); font-weight: 800;">
+              Verificação do Bilhete de Identidade (BI)
+            </strong>
+            <?php if ($temBi): ?>
+              <span style="background: rgba(76,175,80,0.12); color: #2E7D32; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px;">Verificado ✓</span>
+            <?php else: ?>
+              <span style="background: rgba(217,154,30,0.15); color: #B78103; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px;">Pendente</span>
+            <?php endif; ?>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+            <?php if ($temBi): ?>
+              A sua conta está autenticada com documento de identificação civil. Já tem permissão total para reportar ocorrências e apoiar a comunidade.
+            <?php else: ?>
+              Para poder reportar problemas comunitários, é obrigatório submeter o seu Bilhete de Identidade (frente e verso).
+            <?php endif; ?>
+          </p>
+        </div>
+      </div>
+
+      <?php if (!$temBi): ?>
+        <button type="button" onclick="openBiVerifyModal()" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand-terra); color: #FFF; border: none; padding: 11px 22px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(180,69,31,0.3); transition: all 0.2s;" onmouseenter="this.style.filter='brightness(1.08)'" onmouseleave="this.style.filter='none'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Terminar a Verificação
+        </button>
+      <?php else: ?>
+        <button type="button" onclick="openBiVerifyModal()" class="btn btn--ghost btn--sm" style="font-size: 12px;">
+          Atualizar Documentos
+        </button>
+      <?php endif; ?>
+    </div>
+  </div>
+
+  <!-- Card das Definições Pessoais -->
   <div style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 32px; box-shadow: var(--shadow-sm);">
 
     <form action="<?= url('perfil/definicoes') ?>" method="POST">
@@ -119,3 +170,314 @@
   </div>
 
 </div>
+
+<!-- ══ MODAL: TERMINAR A VERIFICAÇÃO DO BI (UPLOAD OU SCANNER) ════════ -->
+<div id="biVerifyModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,10,8,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--surface-card);max-width:560px;width:100%;max-height:92vh;overflow-y:auto;border-radius:18px;box-shadow:0 32px 64px rgba(0,0,0,0.35);border:1px solid var(--border-subtle);animation:scaleUp 0.3s cubic-bezier(0.16,1,0.3,1);">
+
+    <!-- Header do Modal -->
+    <div style="background:linear-gradient(135deg,#1A1410,#2D221A);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--brand-terra);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(180,69,31,0.2);border:1px solid rgba(180,69,31,0.4);display:flex;align-items:center;justify-content:center;color:var(--brand-terra);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><line x1="15" y1="8" x2="17" y2="8"/><line x1="15" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+        </div>
+        <div>
+          <div style="font-size:10.5px;font-weight:700;color:var(--brand-dendem);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:2px;">Verificação Cívica</div>
+          <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:#FFF;">Terminar a Verificação de Identidade</h3>
+        </div>
+      </div>
+      <button onclick="closeBiVerifyModal()" style="background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.7);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.15)';this.style.color='#FFF'" onmouseleave="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.7)'">&times;</button>
+    </div>
+
+    <!-- Corpo do Modal -->
+    <div style="padding:24px;">
+
+      <!-- Seletor de Modo: Upload dos 2 Arquivos VS Scanner por Câmara -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;">
+        <button type="button" id="tabModeUpload" onclick="setBiMode('upload')" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;border:2px solid var(--brand-terra);background:rgba(180,69,31,0.08);color:var(--brand-terra);font-weight:700;font-size:13px;cursor:pointer;transition:all 0.15s;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload das Fotos
+        </button>
+        <button type="button" id="tabModeScanner" onclick="setBiMode('scanner')" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--surface-sunken);color:var(--text-secondary);font-weight:700;font-size:13px;cursor:pointer;transition:all 0.15s;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Scanner o BI
+        </button>
+      </div>
+
+      <form id="biVerifyForm" action="<?= url('perfil/verificacao-bi') ?>" method="POST" enctype="multipart/form-data">
+        <?= csrfField() ?>
+
+        <!-- Hidden inputs para capturas do Scanner Base64 -->
+        <input type="hidden" name="bi_frente_base64" id="biFrenteBase64" value="">
+        <input type="hidden" name="bi_verso_base64" id="biVersoBase64" value="">
+
+        <!-- ── MODO 1: UPLOAD DOS DOIS FICHEIROS (FRENTE E VERSO) ── -->
+        <div id="sectionBiUpload">
+          <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 16px;line-height:1.4;">
+            Selecione as imagens do seu Bilhete de Identidade a partir do seu dispositivo (Formatos: JPG, PNG ou PDF, até 10MB).
+          </p>
+
+          <!-- Upload Frente -->
+          <div style="border:2px dashed var(--border-subtle);border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;background:var(--surface-sunken);transition:border-color 0.2s;" id="cardUploadFrente">
+            <label for="modalBiFrenteInput" style="cursor:pointer;display:block;">
+              <div style="width:38px;height:38px;margin:0 auto 8px;border-radius:50%;background:rgba(31,111,107,0.1);color:var(--brand-baia);display:flex;align-items:center;justify-content:center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <strong style="display:block;font-size:13px;color:var(--text-primary);margin-bottom:2px;">Frente do Bilhete de Identidade</strong>
+              <span id="modalBiFrenteLabel" style="font-size:11px;color:var(--text-muted);">Clique para escolher o ficheiro da Frente</span>
+            </label>
+            <input type="file" id="modalBiFrenteInput" name="bi_frente" accept="image/*,application/pdf" style="display:none;" onchange="handleModalFileSelect(this, 'modalBiFrenteLabel', 'cardUploadFrente')">
+          </div>
+
+          <!-- Upload Verso -->
+          <div style="border:2px dashed var(--border-subtle);border-radius:12px;padding:16px;text-align:center;margin-bottom:20px;background:var(--surface-sunken);transition:border-color 0.2s;" id="cardUploadVerso">
+            <label for="modalBiVersoInput" style="cursor:pointer;display:block;">
+              <div style="width:38px;height:38px;margin:0 auto 8px;border-radius:50%;background:rgba(31,111,107,0.1);color:var(--brand-baia);display:flex;align-items:center;justify-content:center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <strong style="display:block;font-size:13px;color:var(--text-primary);margin-bottom:2px;">Verso do Bilhete de Identidade</strong>
+              <span id="modalBiVersoLabel" style="font-size:11px;color:var(--text-muted);">Clique para escolher o ficheiro do Verso</span>
+            </label>
+            <input type="file" id="modalBiVersoInput" name="bi_verso" accept="image/*,application/pdf" style="display:none;" onchange="handleModalFileSelect(this, 'modalBiVersoLabel', 'cardUploadVerso')">
+          </div>
+        </div>
+
+        <!-- ── MODO 2: SCANNER / CÂMARA DO BI ── -->
+        <div id="sectionBiScanner" style="display:none;">
+          <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 14px;line-height:1.4;">
+            Utilize a câmara do seu telemóvel ou webcam para digitalizar a <strong>Frente</strong> e o <strong>Verso</strong> do BI.
+          </p>
+
+          <!-- Cards de Captura com Câmara Direta -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+
+            <!-- Scanner Frente -->
+            <div style="border:2px dashed var(--brand-terra);border-radius:12px;padding:16px 12px;background:rgba(180,69,31,0.03);text-align:center;">
+              <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">
+                1. Frente do BI
+              </div>
+              
+              <div id="previewFrenteBox" style="height:110px;background:#1A1410;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);font-size:11px;overflow:hidden;border:1px solid var(--border-subtle);">
+                Sem imagem
+              </div>
+
+              <label for="scannerCamFrente" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;box-sizing:border-box;background:var(--brand-terra);color:#FFF;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(180,69,31,0.25);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Abrir Câmara
+              </label>
+              <input type="file" id="scannerCamFrente" accept="image/*" capture="environment" style="display:none;" onchange="handleNativeCameraCapture(this, 'frente')">
+            </div>
+
+            <!-- Scanner Verso -->
+            <div style="border:2px dashed var(--brand-baia);border-radius:12px;padding:16px 12px;background:rgba(31,111,107,0.03);text-align:center;">
+              <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">
+                2. Verso do BI
+              </div>
+
+              <div id="previewVersoBox" style="height:110px;background:#1A1410;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);font-size:11px;overflow:hidden;border:1px solid var(--border-subtle);">
+                Sem imagem
+              </div>
+
+              <label for="scannerCamVerso" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;box-sizing:border-box;background:var(--brand-baia);color:#FFF;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(31,111,107,0.25);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Abrir Câmara
+              </label>
+              <input type="file" id="scannerCamVerso" accept="image/*" capture="environment" style="display:none;" onchange="handleNativeCameraCapture(this, 'verso')">
+            </div>
+
+          </div>
+
+          <!-- Opção alternativa: Vídeo Webcam ao Vivo (para computadores desktop) -->
+          <div style="background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:11.5px;font-weight:700;color:var(--text-secondary);display:flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                Webcam ao Vivo (Vídeo Contínuo)
+              </span>
+              <button type="button" id="btnToggleLiveWebcam" onclick="toggleLiveWebcam()" style="font-size:11px;font-weight:700;color:var(--brand-baia);background:none;border:none;cursor:pointer;text-decoration:underline;">
+                Ativar Webcam
+              </button>
+            </div>
+
+            <!-- Ecrã de vídeo da Webcam -->
+            <div id="liveWebcamArea" style="display:none;margin-top:10px;">
+              <div style="position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:16/10;margin-bottom:10px;">
+                <video id="scannerVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+                <canvas id="scannerCanvas" style="display:none;"></canvas>
+                <div style="position:absolute;inset:15px;border:2px dashed rgba(217,154,30,0.85);border-radius:6px;pointer-events:none;"></div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="button" onclick="captureLiveWebcam('frente')" style="flex:1;background:var(--brand-terra);color:#FFF;border:none;padding:8px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;">
+                  📸 Capturar para Frente
+                </button>
+                <button type="button" onclick="captureLiveWebcam('verso')" style="flex:1;background:var(--brand-baia);color:#FFF;border:none;padding:8px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;">
+                  📸 Capturar para Verso
+                </button>
+              </div>
+            </div>
+
+            <div id="webcamHelpTip" style="font-size:11px;color:var(--text-muted);line-height:1.3;margin-top:4px;">
+              💡 <em>Dica:</em> No telemóvel, os botões <strong>"Abrir Câmara"</strong> acima abrem a câmara fotográfica nativa com nitidez superior.
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões do Rodapé do Formulário -->
+        <div style="display:flex;gap:12px;justify-content:flex-end;align-items:center;padding-top:16px;border-top:1px solid var(--border-subtle);">
+          <button type="button" onclick="closeBiVerifyModal()" class="btn btn--ghost btn--sm">Cancelar</button>
+          <button type="submit" style="display:inline-flex;align-items:center;gap:8px;background:var(--brand-terra);color:#FFF;border:none;padding:11px 24px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(180,69,31,0.3);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Submeter Documentos
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let currentScannerStream = null;
+
+function openBiVerifyModal() {
+  document.getElementById('biVerifyModal').style.display = 'flex';
+}
+
+function closeBiVerifyModal() {
+  stopScannerCamera();
+  document.getElementById('biVerifyModal').style.display = 'none';
+}
+
+document.getElementById('biVerifyModal').addEventListener('click', function(e) {
+  if (e.target === this) closeBiVerifyModal();
+});
+
+function setBiMode(mode) {
+  const btnUpload  = document.getElementById('tabModeUpload');
+  const btnScanner = document.getElementById('tabModeScanner');
+  const secUpload  = document.getElementById('sectionBiUpload');
+  const secScanner = document.getElementById('sectionBiScanner');
+
+  if (mode === 'upload') {
+    btnUpload.style.border = '2px solid var(--brand-terra)';
+    btnUpload.style.background = 'rgba(180,69,31,0.08)';
+    btnUpload.style.color = 'var(--brand-terra)';
+    btnScanner.style.border = '1px solid var(--border-subtle)';
+    btnScanner.style.background = 'var(--surface-sunken)';
+    btnScanner.style.color = 'var(--text-secondary)';
+    secUpload.style.display = 'block';
+    secScanner.style.display = 'none';
+    stopLiveWebcam();
+  } else {
+    btnScanner.style.border = '2px solid var(--brand-terra)';
+    btnScanner.style.background = 'rgba(180,69,31,0.08)';
+    btnScanner.style.color = 'var(--brand-terra)';
+    btnUpload.style.border = '1px solid var(--border-subtle)';
+    btnUpload.style.background = 'var(--surface-sunken)';
+    btnUpload.style.color = 'var(--text-secondary)';
+    secUpload.style.display = 'none';
+    secScanner.style.display = 'block';
+  }
+}
+
+function handleModalFileSelect(input, labelId, cardId) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    document.getElementById(labelId).textContent = '✓ ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+    document.getElementById(cardId).style.borderColor = 'var(--brand-terra)';
+    document.getElementById(cardId).style.background = 'rgba(180,69,31,0.04)';
+  }
+}
+
+// ── CAPTURA DIRETA / CÂMARA NATIVA (FUNCIONA EM TODOS OS DISPOSITIVOS) ──
+function handleNativeCameraCapture(input, side) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const dataUrl = e.target.result;
+      if (side === 'frente') {
+        document.getElementById('biFrenteBase64').value = dataUrl;
+        document.getElementById('previewFrenteBox').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        document.getElementById('biVersoBase64').value = dataUrl;
+        document.getElementById('previewVersoBox').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// ── WEBCAM EM TEMPO REAL OPCIONAL (PARA QUEM TEM PERMISSÃO HABILITADA) ──
+async function toggleLiveWebcam() {
+  const area = document.getElementById('liveWebcamArea');
+  const btn = document.getElementById('btnToggleLiveWebcam');
+  if (area.style.display === 'block') {
+    stopLiveWebcam();
+  } else {
+    try {
+      const video = document.getElementById('scannerVideo');
+      let stream = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+        });
+      } catch (e1) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+
+      currentScannerStream = stream;
+      video.srcObject = stream;
+      area.style.display = 'block';
+      btn.textContent = 'Desligar Webcam';
+      btn.style.color = 'var(--brand-terra)';
+    } catch (err) {
+      alert('Não foi possível aceder à webcam ao vivo. Utilize os botões "Abrir Câmara" acima para tirar a foto diretamente.');
+    }
+  }
+}
+
+function stopLiveWebcam() {
+  if (currentScannerStream) {
+    currentScannerStream.getTracks().forEach(track => track.stop());
+    currentScannerStream = null;
+  }
+  const area = document.getElementById('liveWebcamArea');
+  const btn = document.getElementById('btnToggleLiveWebcam');
+  if (area) area.style.display = 'none';
+  if (btn) {
+    btn.textContent = 'Ativar Webcam';
+    btn.style.color = 'var(--brand-baia)';
+  }
+}
+
+function captureLiveWebcam(side) {
+  const video = document.getElementById('scannerVideo');
+  const canvas = document.getElementById('scannerCanvas');
+  if (!video || !video.videoWidth) {
+    alert('Aguarde até o vídeo carregar.');
+    return;
+  }
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+  if (side === 'frente') {
+    document.getElementById('biFrenteBase64').value = dataUrl;
+    document.getElementById('previewFrenteBox').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    document.getElementById('biVersoBase64').value = dataUrl;
+    document.getElementById('previewVersoBox').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+  }
+}
+
+function closeBiVerifyModal() {
+  stopLiveWebcam();
+  document.getElementById('biVerifyModal').style.display = 'none';
+}
+</script>

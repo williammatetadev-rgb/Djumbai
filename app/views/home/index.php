@@ -44,7 +44,7 @@ $rejeitados = (int) ($panorama['rejeitados'] ?? 0);
             </button>
           <?php endif; ?>
           <a href="<?= url('problemas') ?>" class="btn btn--ghost btn--lg">
-            Ver Reportes Activos →
+            Ver Reportes Activos
           </a>
         </div>
 
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div style="font-family:sans-serif;padding:4px;">
               <strong style="font-size:12px;display:block;margin-bottom:2px;">${p.titulo}</strong>
               <span style="font-size:11px;color:#666;">📍 ${p.bairro}</span><br>
-              <a href="${p.url}" style="font-size:11px;color:#B4451F;font-weight:bold;margin-top:4px;display:inline-block;">Ver mais →</a>
+              <a href="${p.url}" style="font-size:11px;color:#B4451F;font-weight:bold;margin-top:4px;display:inline-block;">Ver mais</a>
             </div>
           `);
           bounds.push([p.lat, p.lng]);
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <span class="section-header__kicker">Mais Confirmados pela Comunidade</span>
         <h2 id="destaque-heading" class="section-header__title" style="margin-top:4px;">Reportes em Destaque</h2>
       </div>
-      <a href="<?= url('problemas') ?>" class="btn btn--ghost btn--sm">Ver Todos →</a>
+      <a href="<?= url('problemas') ?>" class="btn btn--ghost btn--sm">Ver Todos</a>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:var(--space-4);">

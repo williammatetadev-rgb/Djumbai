@@ -15,7 +15,7 @@
   <header class="admin-map-topbar">
     <div class="admin-map-topbar__left">
       <a href="<?= url('admin') ?>" class="btn btn--ghost btn--sm" style="display:inline-flex;align-items:center;gap:6px;">
-        ← Voltar ao Painel
+        Voltar ao Painel
       </a>
       <div class="topbar-divider"></div>
       <div>
@@ -649,7 +649,7 @@ document.addEventListener('DOMContentLoaded', function () {
             📍 <strong>${p.bairro}</strong>${p.municipio ? ', ' + p.municipio : ''}<br>
             💬 ${p.total_confirmacoes} confirmações comunitárias
           </div>
-          <a href="${p.url}" class="mapa-popup__btn">Gerir Ocorrência →</a>
+          <a href="${p.url}" class="mapa-popup__btn">Gerir Ocorrência</a>
         </div>
       `;
 

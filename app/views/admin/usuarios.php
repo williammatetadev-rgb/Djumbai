@@ -68,9 +68,28 @@ $totalOnline   = count(array_filter($cidadaos, fn($u) => !empty($u['ultimo_acess
       <?php foreach ($cidadaos as $u):
         $isBanned = ($u['status'] ?? 'ativo') === 'banido';
         $isOnline = !empty($u['ultimo_acesso']) && strtotime($u['ultimo_acesso']) >= strtotime('-15 minutes');
-        $avatarBg = $isBanned ? '#B4451F' : (['#1F6F6B','#3F5A3C','#6B5A4A','#D99A1E'][crc32($u['email']) % 4]);
+        $avatarBg = $isBanned ? '#B4451F' : (['#1F6F6B','#3F5A3C','#6B5A4A','#D99A1E'][crc32($u['email'] ?? $u['nome']) % 4]);
+        $userDataJson = htmlspecialchars(json_encode([
+          'id'                => (int)$u['id'],
+          'nome'              => $u['nome'] ?? '',
+          'email'             => $u['email'] ?? '',
+          'telefone'          => $u['telefone'] ?? '',
+          'bairro_nome'       => $u['bairro_nome'] ?? '—',
+          'municipio_nome'    => $u['municipio_nome'] ?? '',
+          'status'            => $u['status'] ?? 'ativo',
+          'tipo'              => $u['tipo'] ?? 'cidadao',
+          'criado_em'         => !empty($u['criado_em']) ? dataAngolana($u['criado_em']) : '—',
+          'ultimo_acesso'     => !empty($u['ultimo_acesso']) ? dataAngolana($u['ultimo_acesso']) : 'Sem registo',
+          'is_online'         => $isOnline,
+          'total_reportes'    => (int)($u['total_reportes'] ?? 0),
+          'total_comentarios' => (int)($u['total_comentarios'] ?? 0),
+          'has_bi_frente'     => !empty($u['bi_frente']),
+          'has_bi_verso'      => !empty($u['bi_verso']),
+          'bi_frente_url'     => !empty($u['bi_frente']) ? url('admin/usuarios/' . $u['id'] . '/documento/frente') : null,
+          'bi_verso_url'      => !empty($u['bi_verso']) ? url('admin/usuarios/' . $u['id'] . '/documento/verso') : null,
+        ]), ENT_QUOTES, 'UTF-8');
       ?>
-        <div style="display:grid;grid-template-columns:2.2fr 1.1fr 1.1fr 1.3fr 0.8fr 2.1fr;gap:0;padding:14px 20px;border-bottom:1px solid var(--border-subtle);align-items:center;background:<?= $isBanned ? 'rgba(180,69,31,0.04)' : 'transparent' ?>;transition:background 0.15s;" onmouseenter="this.style.background='<?= $isBanned ? 'rgba(180,69,31,0.07)' : 'var(--surface-sunken)' ?>'" onmouseleave="this.style.background='<?= $isBanned ? 'rgba(180,69,31,0.04)' : 'transparent' ?>'">
+        <div class="user-table-row" data-user='<?= $userDataJson ?>' onclick="handleUserRowClick(event, this)" style="display:grid;grid-template-columns:2.2fr 1.1fr 1.1fr 1.3fr 0.8fr 2.1fr;gap:0;padding:14px 20px;border-bottom:1px solid var(--border-subtle);align-items:center;background:<?= $isBanned ? 'rgba(180,69,31,0.04)' : 'transparent' ?>;cursor:pointer;transition:all 0.15s;" onmouseenter="this.style.background='<?= $isBanned ? 'rgba(180,69,31,0.08)' : 'var(--surface-sunken)' ?>'" onmouseleave="this.style.background='<?= $isBanned ? 'rgba(180,69,31,0.04)' : 'transparent' ?>'" title="Clique para ver os detalhes completos deste cidadão">
 
           <!-- Membro -->
           <div style="display:flex;align-items:center;gap:12px;">
@@ -81,8 +100,17 @@ $totalOnline   = count(array_filter($cidadaos, fn($u) => !empty($u['ultimo_acess
               <?php endif; ?>
             </div>
             <div style="min-width:0;">
-              <div style="font-weight:700;font-size:13.5px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= e($u['nome']) ?></div>
-              <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= e($u['email']) ?></div>
+              <div style="font-weight:700;font-size:13.5px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;">
+                <?= e($u['nome']) ?>
+                <?php if (!empty($u['bi_frente']) && !empty($u['bi_verso'])): ?>
+                  <span title="BI Verificado" style="display:inline-flex;align-items:center;background:rgba(76,175,80,0.15);color:#2E7D32;padding:1px 6px;border-radius:10px;font-size:9.5px;font-weight:700;">BI ✓</span>
+                <?php else: ?>
+                  <span title="BI Pendente" style="display:inline-flex;align-items:center;background:rgba(217,154,30,0.15);color:#B78103;padding:1px 6px;border-radius:10px;font-size:9.5px;font-weight:700;">Sem BI</span>
+                <?php endif; ?>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <?= e($u['email'] ?: ($u['telefone'] ?: 'Sem contacto')) ?>
+              </div>
             </div>
           </div>
 
@@ -133,7 +161,7 @@ $totalOnline   = count(array_filter($cidadaos, fn($u) => !empty($u['ultimo_acess
           </div>
 
           <!-- Moderação -->
-          <div style="display:flex;gap:6px;justify-content:flex-end;">
+          <div style="display:flex;gap:6px;justify-content:flex-end;" onclick="event.stopPropagation()">
             <button type="button" onclick="openWarnModal(<?= $u['id'] ?>, '<?= e(addslashes($u['nome'])) ?>')" style="display:flex;align-items:center;gap:4px;background:rgba(31,111,107,0.08);border:1px solid rgba(31,111,107,0.25);color:var(--brand-baia);padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;" onmouseenter="this.style.background='var(--brand-baia)';this.style.color='#FFF'" onmouseleave="this.style.background='rgba(31,111,107,0.08)';this.style.color='var(--brand-baia)'" title="Enviar aviso de conduta">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               Aviso
@@ -260,4 +288,182 @@ function closeWarnModal() {
 document.getElementById('warnModal').addEventListener('click', function(e){
   if(e.target === this) closeWarnModal();
 });
+
+// ══ MODAL DE DETALHES COMPLETOS DO UTILIZADOR ═══════════════════════
+function handleUserRowClick(e, el) {
+  // If user clicked inside an action button or link or form, don't trigger row modal
+  if (e.target.closest('button') || e.target.closest('a') || e.target.closest('form')) {
+    return;
+  }
+  const rawData = el.getAttribute('data-user');
+  if (!rawData) return;
+  try {
+    const user = JSON.parse(rawData);
+    openUserDetailsModal(user);
+  } catch (err) {
+    console.error('Erro ao abrir detalhes:', err);
+  }
+}
+
+function openUserDetailsModal(u) {
+  document.getElementById('udNome').textContent = u.nome || '—';
+  document.getElementById('udEmail').textContent = u.email || 'Não associado';
+  document.getElementById('udTelefone').textContent = u.telefone || 'Não associado';
+  document.getElementById('udLocalizacao').textContent = (u.bairro_nome || '—') + (u.municipio_nome ? (', ' + u.municipio_nome) : '');
+  document.getElementById('udCriadoEm').textContent = u.criado_em || '—';
+  document.getElementById('udUltimoAcesso').textContent = u.ultimo_acesso || 'Sem registo';
+  document.getElementById('udReportes').textContent = u.total_reportes + ' reportes';
+  document.getElementById('udComentarios').textContent = u.total_comentarios + ' comentários';
+
+  // Status badge
+  const statusBadge = document.getElementById('udStatusBadge');
+  if (u.status === 'banido') {
+    statusBadge.innerHTML = '<span style="background:rgba(180,69,31,0.12);color:var(--brand-terra);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;">Suspenso</span>';
+  } else {
+    statusBadge.innerHTML = '<span style="background:rgba(76,175,80,0.12);color:#2E7D32;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;">Ativo</span>';
+  }
+
+  // BI status and images
+  const biBoxFrente = document.getElementById('udBiFrenteBox');
+  const biBoxVerso = document.getElementById('udBiVersoBox');
+
+  if (u.has_bi_frente && u.bi_frente_url) {
+    biBoxFrente.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Frente do BI</div>
+      <a href="${u.bi_frente_url}" target="_blank" title="Abrir imagem em tamanho real" style="display:block;border-radius:8px;overflow:hidden;border:1px solid var(--border-subtle);background:#000;">
+        <img src="${u.bi_frente_url}" alt="Frente do BI" style="width:100%;height:140px;object-fit:cover;display:block;">
+      </a>
+      <div style="text-align:center;margin-top:4px;">
+        <a href="${u.bi_frente_url}" target="_blank" style="font-size:10.5px;color:var(--brand-baia);font-weight:600;text-decoration:none;">Ver Original ↗</a>
+      </div>
+    `;
+  } else {
+    biBoxFrente.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Frente do BI</div>
+      <div style="height:140px;border-radius:8px;background:var(--surface-sunken);border:1px dashed var(--border-subtle);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-muted);font-size:11.5px;padding:12px;text-align:center;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:6px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Frente não submetida
+      </div>
+    `;
+  }
+
+  if (u.has_bi_verso && u.bi_verso_url) {
+    biBoxVerso.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Verso do BI</div>
+      <a href="${u.bi_verso_url}" target="_blank" title="Abrir imagem em tamanho real" style="display:block;border-radius:8px;overflow:hidden;border:1px solid var(--border-subtle);background:#000;">
+        <img src="${u.bi_verso_url}" alt="Verso do BI" style="width:100%;height:140px;object-fit:cover;display:block;">
+      </a>
+      <div style="text-align:center;margin-top:4px;">
+        <a href="${u.bi_verso_url}" target="_blank" style="font-size:10.5px;color:var(--brand-baia);font-weight:600;text-decoration:none;">Ver Original ↗</a>
+      </div>
+    `;
+  } else {
+    biBoxVerso.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Verso do BI</div>
+      <div style="height:140px;border-radius:8px;background:var(--surface-sunken);border:1px dashed var(--border-subtle);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-muted);font-size:11.5px;padding:12px;text-align:center;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:6px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Verso não submetido
+      </div>
+    `;
+  }
+
+  document.getElementById('userDetailsModal').style.display = 'flex';
+}
+
+function closeUserDetailsModal() {
+  document.getElementById('userDetailsModal').style.display = 'none';
+}
+
+document.getElementById('userDetailsModal').addEventListener('click', function(e){
+  if(e.target === this) closeUserDetailsModal();
+});
 </script>
+
+<!-- ══ MODAL: DETALHES COMPLETOS DO UTILIZADOR ═══════════════════════ -->
+<div id="userDetailsModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,10,8,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="background:var(--surface-card);max-width:620px;width:92%;max-height:90vh;overflow-y:auto;border-radius:18px;box-shadow:0 32px 64px rgba(0,0,0,0.3);border:1px solid var(--border-subtle);animation:scaleUp 0.35s cubic-bezier(0.16,1,0.3,1);">
+
+    <!-- Cabeçalho -->
+    <div style="background:linear-gradient(135deg,#1A1410,#2D221A);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--brand-terra);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(180,69,31,0.2);border:1px solid rgba(180,69,31,0.4);display:flex;align-items:center;justify-content:center;color:var(--brand-terra);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+          <div style="font-size:10.5px;font-weight:700;color:var(--brand-dendem);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:2px;">Ficha do Utilizador</div>
+          <h3 id="udNome" style="margin:0;font-size:1.15rem;font-weight:800;color:#FFF;"></h3>
+        </div>
+      </div>
+      <button onclick="closeUserDetailsModal()" style="background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.7);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.15)';this.style.color='#FFF'" onmouseleave="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.7)'">&times;</button>
+    </div>
+
+    <!-- Conteúdo -->
+    <div style="padding:24px;">
+
+      <!-- Grid de Dados Pessoais -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+        <div style="background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">E-mail</div>
+          <div id="udEmail" style="font-size:13px;font-weight:600;color:var(--text-primary);word-break:break-all;"></div>
+        </div>
+        <div style="background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Telefone</div>
+          <div id="udTelefone" style="font-size:13px;font-weight:600;color:var(--text-primary);"></div>
+        </div>
+        <div style="background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Localização Residencial</div>
+          <div id="udLocalizacao" style="font-size:13px;font-weight:600;color:var(--text-primary);"></div>
+        </div>
+        <div style="background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Estado da Conta</div>
+            <div id="udStatusBadge"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Atividade e Datas -->
+      <div style="background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:10px;padding:12px 14px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;">
+        <div>
+          <span style="color:var(--text-muted);">Data de Registo:</span>
+          <strong id="udCriadoEm" style="color:var(--text-primary);margin-left:4px;"></strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);">Último Acesso:</span>
+          <strong id="udUltimoAcesso" style="color:var(--text-primary);margin-left:4px;"></strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);">Total de Ocorrências:</span>
+          <strong id="udReportes" style="color:var(--text-primary);margin-left:4px;"></strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);">Total de Comentários:</span>
+          <strong id="udComentarios" style="color:var(--text-primary);margin-left:4px;"></strong>
+        </div>
+      </div>
+
+      <!-- Documentos de Identificação (BI Frente e Verso) -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <label style="font-size:11.5px;font-weight:800;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.6px;display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand-terra)" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><line x1="15" y1="8" x2="17" y2="8"/><line x1="15" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+            Bilhete de Identidade (BI Angola)
+          </label>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div id="udBiFrenteBox"></div>
+          <div id="udBiVersoBox"></div>
+        </div>
+      </div>
+
+      <!-- Rodapé do Modal -->
+      <div style="display:flex;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-subtle);">
+        <button type="button" onclick="closeUserDetailsModal()" class="btn btn--primary btn--sm">
+          Fechar Ficha
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -10,7 +10,7 @@
       O endereço que procura não existe ou foi removido. Verifique o link e tente novamente.
     </p>
     <a href="<?= url() ?>" class="btn btn--primary btn--lg">
-      ← Voltar à Página Inicial
+      Voltar à Página Inicial
     </a>
   </div>
 </section>

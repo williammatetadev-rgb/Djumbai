@@ -30,7 +30,7 @@ $rejeitados   = (int) ($panorama['rejeitados'] ?? 0);
       Ver <?= $pendentes ?> Pendentes
     </a>
     <a href="<?= url('admin/problemas') ?>" class="btn btn--ghost btn--sm">
-      Todas as Ocorrências →
+      Todas as Ocorrências
     </a>
   </div>
 </div>
@@ -206,7 +206,7 @@ $rejeitados   = (int) ($panorama['rejeitados'] ?? 0);
     </div>
 
     <a href="<?= url('admin/problemas') ?>" class="btn btn--ghost btn--sm">
-      Gerir Todas as Ocorrências (<?= $totalGeral ?>) →
+      Gerir Todas as Ocorrências (<?= $totalGeral ?>)
     </a>
   </div>
 

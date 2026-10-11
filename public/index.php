@@ -129,6 +129,7 @@ $router->get( '/logout',                     'AuthController',     'logout');
 $router->get( '/perfil',                     'UserController',     'dashboard');
 $router->get( '/perfil/definicoes',          'UserController',     'settings');
 $router->post('/perfil/definicoes',          'UserController',     'salvarSettings');
+$router->post('/perfil/verificacao-bi',      'UserController',     'submeterVerificacaoBi');
 $router->post('/notificacoes/{id}/ler',      'UserController',     'marcarLida');
 
 // ─── Problemas & Comentários (Cidadão) ───────────────────────────
@@ -147,6 +148,7 @@ $router->get( '/admin/mapa',                     'AdminController',    'mapa');
 $router->get( '/admin/problemas',                'AdminController',    'problemas');
 $router->post('/admin/problemas/{id}/estado',     'AdminController',    'mudarEstado');
 $router->get( '/admin/usuarios',                 'AdminController',    'usuarios');
+$router->get( '/admin/usuarios/{id}/documento/{tipo}', 'AdminController', 'verDocumento');
 $router->post('/admin/usuarios/{id}/banir',      'AdminController',    'toggleBan');
 $router->post('/admin/usuarios/{id}/notificar',  'AdminController',    'notificarBonsModos');
 $router->post('/admin/usuarios/{id}/eliminar',   'AdminController',    'eliminarUsuario');
