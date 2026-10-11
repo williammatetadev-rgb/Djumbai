@@ -7,6 +7,25 @@
   <title><?= e($titulo ?? 'Painel Admin – Djumbai') ?></title>
   <link rel="stylesheet" href="<?= url('css/style.css') ?>" />
   <link rel="stylesheet" href="<?= url('css/admin.css') ?>" />
+  <style>
+    /* Bloqueio definitivo da barra de scroll cinzenta na sidebar */
+    #adminSidebar,
+    #adminSidebar *,
+    .admin-sidebar,
+    .admin-sidebar__nav {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    #adminSidebar::-webkit-scrollbar,
+    #adminSidebar *::-webkit-scrollbar,
+    .admin-sidebar::-webkit-scrollbar,
+    .admin-sidebar__nav::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
+    }
+  </style>
 </head>
 <body class="admin-body">
 <aside class="admin-sidebar" id="adminSidebar">
@@ -36,14 +55,14 @@
       </div>
     </a>
 
-    <a href="<?= url('mapa') ?>" class="admin-nav-item <?= isCurrentPage('/mapa') ? 'is-active' : '' ?>">
+    <a href="<?= url('admin/mapa') ?>" class="admin-nav-item <?= isCurrentPage('/admin/mapa') ? 'is-active' : '' ?>">
       <div class="admin-nav-item__left">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <span>Mapa de Ocorrências</span>
       </div>
     </a>
 
-    <span class="admin-sidebar__section-title">Moderação & Comunidade</span>
+    <span class="admin-sidebar__section-title">Moderação &amp; Comunidade</span>
     <a href="<?= url('admin/usuarios') ?>" class="admin-nav-item <?= isCurrentPage('/admin/usuarios') ? 'is-active' : '' ?>">
       <div class="admin-nav-item__left">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>

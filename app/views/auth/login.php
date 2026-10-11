@@ -58,22 +58,22 @@
       <form class="auth-form" action="<?= url('login') ?>" method="POST" novalidate>
         <?= csrfField() ?>
 
-        <!-- Email -->
+        <!-- Email ou Telefone -->
         <div class="form-field">
-          <label for="loginEmail" class="form-label">Correio electrónico</label>
+          <label for="loginEmail" class="form-label">Correio electrónico ou Telefone</label>
           <div class="form-input-wrap">
             <span class="form-input-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </span>
             <input
-              type="email"
+              type="text"
               id="loginEmail"
               name="email"
               class="form-input <?= !empty($errors['email']) ? 'is-invalid' : '' ?>"
-              placeholder="exemplo@djumbai.ao"
+              placeholder="exemplo@djumbai.ao ou 923 000 000"
               value="<?= e($old['email'] ?? '') ?>"
               required
-              autocomplete="email"
+              autocomplete="username"
             />
           </div>
           <span class="form-error-msg" id="emailError" aria-live="polite">

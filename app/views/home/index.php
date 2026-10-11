@@ -32,10 +32,17 @@ $rejeitados = (int) ($panorama['rejeitados'] ?? 0);
         </p>
 
         <div class="hero__ctas">
-          <a href="<?= url('reportar') ?>" class="btn btn--primary btn--lg">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            Reportar um Problema
-          </a>
+          <?php if (isLoggedIn()): ?>
+            <a href="<?= url('reportar') ?>" class="btn btn--primary btn--lg">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              Reportar um Problema
+            </a>
+          <?php else: ?>
+            <button type="button" onclick="openAuthPromptModal('reportar')" class="btn btn--primary btn--lg">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              Reportar um Problema
+            </button>
+          <?php endif; ?>
           <a href="<?= url('problemas') ?>" class="btn btn--ghost btn--lg">
             Ver Reportes Activos →
           </a>

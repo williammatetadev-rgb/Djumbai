@@ -67,6 +67,8 @@ abstract class Controller
     {
         if (empty($_SESSION['user_id'])) {
             $_SESSION['flash_warning'] = 'Precisa de iniciar sessão para aceder a esta página.';
+            // Guardar URL atual para redirecionar de volta após o login
+            $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'] ?? '/';
             $this->redirect('/login');
         }
     }

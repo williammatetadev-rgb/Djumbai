@@ -25,9 +25,15 @@
       </div>
 
       <div class="mapa-header__actions">
-        <a href="<?= url('reportar') ?>" class="btn btn--primary btn--sm">
-          <?= icon('plus', 16, '', '#FFF') ?> Reportar Novo Problema
-        </a>
+        <?php if (isLoggedIn()): ?>
+          <a href="<?= url('reportar') ?>" class="btn btn--primary btn--sm">
+            <?= icon('plus', 16, '', '#FFF') ?> Reportar Novo Problema
+          </a>
+        <?php else: ?>
+          <button type="button" onclick="openAuthPromptModal('reportar')" class="btn btn--primary btn--sm">
+            <?= icon('plus', 16, '', '#FFF') ?> Reportar Novo Problema
+          </button>
+        <?php endif; ?>
         <a href="<?= url('problemas') ?>" class="btn btn--ghost btn--sm">
           <?= icon('list', 16, '', 'currentColor') ?> Ver Lista
         </a>
@@ -164,7 +170,11 @@
                 </div>
 
                 <h4 class="mapa-card-item__title">
-                  <a href="<?= url('problemas/' . $p['id']) ?>"><?= e($p['titulo']) ?></a>
+                  <?php if (isLoggedIn()): ?>
+                    <a href="<?= url('problemas/' . $p['id']) ?>"><?= e($p['titulo']) ?></a>
+                  <?php else: ?>
+                    <a href="javascript:void(0)" onclick="openAuthPromptModal('ocorrencia')"><?= e($p['titulo']) ?></a>
+                  <?php endif; ?>
                 </h4>
 
                 <div class="mapa-card-item__meta">
@@ -622,25 +632,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const marker = L.marker([p.lat, p.lng], { icon: customIcon });
 
-      // Popup Interativo
-      const popupHtml = `
-        <div class="mapa-popup">
-          <span class="mapa-popup__tag" style="background:${p.estado_cor}20;color:${p.estado_cor};">
-            ${p.estado}
-          </span>
-          ${isCritico ? '<span class="badge badge--critico" style="font-size:9px;margin-left:4px;">🔥 Crítico</span>' : ''}
-          <h4 class="mapa-popup__title">
-            <a href="${p.url}">${p.titulo}</a>
-          </h4>
-          <div class="mapa-popup__meta">
-            📍 <strong>${p.bairro}</strong>${p.municipio ? ', ' + p.municipio : ''}<br>
-            💬 ${p.total_confirmacoes} confirmações comunitárias
+      // Se o utilizador for visitante (não logado), o clique no marcador abre directamente o modal de autenticação
+      if (typeof window.IS_LOGGED_IN !== 'undefined' && !window.IS_LOGGED_IN) {
+        marker.on('click', function(e) {
+          if (typeof window.openAuthPromptModal === 'function') {
+            window.openAuthPromptModal('ocorrencia');
+          }
+        });
+      } else {
+        // Popup Interativo para utilizador autenticado
+        const popupHtml = `
+          <div class="mapa-popup">
+            <span class="mapa-popup__tag" style="background:${p.estado_cor}20;color:${p.estado_cor};">
+              ${p.estado}
+            </span>
+            ${isCritico ? '<span class="badge badge--critico" style="font-size:9px;margin-left:4px;">🔥 Crítico</span>' : ''}
+            <h4 class="mapa-popup__title">
+              <a href="${p.url}">${p.titulo}</a>
+            </h4>
+            <div class="mapa-popup__meta">
+              📍 <strong>${p.bairro}</strong>${p.municipio ? ', ' + p.municipio : ''}<br>
+              💬 ${p.total_confirmacoes} confirmações comunitárias
+            </div>
+            <a href="${p.url}" class="mapa-popup__btn">Ver Detalhes do Reporte →</a>
           </div>
-          <a href="${p.url}" class="mapa-popup__btn">Ver Detalhes do Reporte →</a>
-        </div>
-      `;
+        `;
+        marker.bindPopup(popupHtml);
+      }
 
-      marker.bindPopup(popupHtml);
       markersLayer.addLayer(marker);
 
       bounds.push([p.lat, p.lng]);
@@ -733,7 +752,10 @@ document.addEventListener('DOMContentLoaded', function () {
           ${p.total_confirmacoes >= 3 ? '<span class="badge badge--critico">🔥 Crítico</span>' : ''}
         </div>
         <h4 class="mapa-card-item__title">
-          <a href="${p.url}">${p.titulo}</a>
+          ${(typeof window.IS_LOGGED_IN !== 'undefined' && !window.IS_LOGGED_IN)
+            ? `<a href="javascript:void(0)" onclick="openAuthPromptModal('ocorrencia')">${p.titulo}</a>`
+            : `<a href="${p.url}">${p.titulo}</a>`
+          }
         </h4>
         <div class="mapa-card-item__meta">
           <span>📍 ${p.bairro}${p.municipio ? ', ' + p.municipio : ''}</span>

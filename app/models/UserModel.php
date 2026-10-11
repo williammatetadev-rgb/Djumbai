@@ -22,14 +22,55 @@ class UserModel extends Model
     }
 
     /**
+     * Encontra um utilizador pelo telefone
+     */
+    public function findByTelefone(string $telefone): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM user WHERE telefone = :telefone LIMIT 1"
+        );
+        $stmt->execute([':telefone' => $telefone]);
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
+
+    /**
+     * Encontra um utilizador por e-mail OU telefone (login flexível)
+     */
+    public function findByEmailOrTelefone(string $identificador): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM user WHERE (email = :id_e AND email IS NOT NULL AND email != '') OR (telefone = :id_t AND telefone IS NOT NULL AND telefone != '') LIMIT 1"
+        );
+        $stmt->execute([
+            ':id_e' => $identificador,
+            ':id_t' => $identificador,
+        ]);
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
+
+    /**
      * Verifica se um e-mail já está registado na plataforma
      */
     public function emailExists(string $email): bool
     {
         $stmt = $this->db->prepare(
-            "SELECT COUNT(*) FROM user WHERE email = :email"
+            "SELECT COUNT(*) FROM user WHERE email = :email AND email IS NOT NULL AND email != ''"
         );
         $stmt->execute([':email' => $email]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    /**
+     * Verifica se um telefone já está registado na plataforma
+     */
+    public function telefoneExists(string $telefone): bool
+    {
+        $stmt = $this->db->prepare(
+            "SELECT COUNT(*) FROM user WHERE telefone = :telefone AND telefone IS NOT NULL AND telefone != ''"
+        );
+        $stmt->execute([':telefone' => $telefone]);
         return (int) $stmt->fetchColumn() > 0;
     }
 
@@ -39,7 +80,7 @@ class UserModel extends Model
     public function emailExistsExcept(string $email, int $excludeUserId): bool
     {
         $stmt = $this->db->prepare(
-            "SELECT COUNT(*) FROM user WHERE email = :email AND id != :uid"
+            "SELECT COUNT(*) FROM user WHERE email = :email AND id != :uid AND email IS NOT NULL AND email != ''"
         );
         $stmt->execute([':email' => $email, ':uid' => $excludeUserId]);
         return (int) $stmt->fetchColumn() > 0;

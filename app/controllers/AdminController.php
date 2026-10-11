@@ -48,6 +48,40 @@ class AdminController extends Controller
         ], 'admin');
     }
 
+    /**
+     * Exibe o Mapa Interativo de Ocorrências dentro do Painel Admin
+     */
+    public function mapa(): void
+    {
+        $categoriaId = max(0, (int) ($_GET['categoria'] ?? 0));
+        $estadoId    = max(0, (int) ($_GET['estado']    ?? 0));
+        $provinciaId = max(0, (int) ($_GET['provincia'] ?? 0));
+        $municipioId = max(0, (int) ($_GET['municipio'] ?? 0));
+
+        $pontos     = $this->problemaModel->getPontosMapa($categoriaId, $estadoId, $provinciaId, $municipioId);
+        $categorias = $this->categoriaModel->findAll();
+
+        $db         = Database::getInstance();
+        $provincias = $db->query("SELECT id, nome, latitude, longitude FROM provincias ORDER BY nome ASC")->fetchAll();
+        $municipios = $db->query("SELECT id, nome, provincia_id FROM municipios ORDER BY nome ASC")->fetchAll();
+        $estados    = $db->query("SELECT id, nome, cor FROM estados_problema ORDER BY id ASC")->fetchAll();
+
+        $this->render('admin/mapa', [
+            'titulo'     => 'Mapa de Ocorrências – Djumbai Admin',
+            'pontos'     => $pontos,
+            'categorias' => $categorias,
+            'provincias' => $provincias,
+            'municipios' => $municipios,
+            'estados'    => $estados,
+            'filtros'    => [
+                'categoria' => $categoriaId,
+                'estado'    => $estadoId,
+                'provincia' => $provinciaId,
+                'municipio' => $municipioId,
+            ],
+        ], 'admin_mapa');
+    }
+
     public function problemas(): void
     {
         $categoriaId = (int) ($_GET['categoria'] ?? 0);

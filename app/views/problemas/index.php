@@ -33,11 +33,22 @@ $hasActiveFilters = !empty($filtros['q'])
         </p>
       </div>
 
-      <div>
-        <a href="<?= url('reportar') ?>" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand-terra); color: #FFF; padding: 11px 22px; border-radius: 10px; text-decoration: none; font-size: 13.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(180,69,31,0.4); transition: transform 0.15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Reportar Ocorrência
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="<?= url('mapa') ?>" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,251,245,0.12); color: #FFF; border: 1px solid rgba(255,251,245,0.2); padding: 11px 18px; border-radius: 10px; text-decoration: none; font-size: 13.5px; font-weight: 700; transition: background 0.15s;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Ver no Mapa
         </a>
+        <?php if (isLoggedIn()): ?>
+          <a href="<?= url('reportar') ?>" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand-terra); color: #FFF; padding: 11px 22px; border-radius: 10px; text-decoration: none; font-size: 13.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(180,69,31,0.4); transition: transform 0.15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Reportar Ocorrência
+          </a>
+        <?php else: ?>
+          <button type="button" onclick="openAuthPromptModal('reportar')" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand-terra); color: #FFF; padding: 11px 22px; border-radius: 10px; border: none; font-size: 13.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(180,69,31,0.4); cursor: pointer; transition: transform 0.15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Reportar Ocorrência
+          </button>
+        <?php endif; ?>
       </div>
 
     </div>
@@ -184,7 +195,11 @@ $hasActiveFilters = !empty($filtros['q'])
       <?php if ($hasActiveFilters): ?>
         <a href="<?= url('problemas') ?>" class="btn btn--secondary btn--sm" style="margin-right:8px;">Limpar Filtros</a>
       <?php endif; ?>
-      <a href="<?= url('reportar') ?>" class="btn btn--primary btn--sm">Reportar Novo Problema</a>
+      <?php if (isLoggedIn()): ?>
+        <a href="<?= url('reportar') ?>" class="btn btn--primary btn--sm">Reportar Novo Problema</a>
+      <?php else: ?>
+        <button type="button" onclick="openAuthPromptModal('reportar')" class="btn btn--primary btn--sm">Reportar Novo Problema</button>
+      <?php endif; ?>
     </div>
   <?php else: ?>
 
@@ -250,10 +265,17 @@ $hasActiveFilters = !empty($filtros['q'])
               </button>
 
               <!-- Botão Ver Detalhes -->
-              <a href="<?= url('problemas/' . $prob['id']) ?>" style="display: inline-flex; align-items: center; gap: 6px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 10px; font-size: 12.5px; font-weight: 700; text-decoration: none; transition: all 0.15s;" onmouseenter="this.style.background='var(--brand-terra)'; this.style.color='#FFF'; this.style.borderColor='var(--brand-terra)';" onmouseleave="this.style.background='var(--surface-sunken)'; this.style.color='var(--text-secondary)'; this.style.borderColor='var(--border-subtle)';">
-                Ver Detalhes
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              </a>
+              <?php if (isLoggedIn()): ?>
+                <a href="<?= url('problemas/' . $prob['id']) ?>" style="display: inline-flex; align-items: center; gap: 6px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 10px; font-size: 12.5px; font-weight: 700; text-decoration: none; transition: all 0.15s;" onmouseenter="this.style.background='var(--brand-terra)'; this.style.color='#FFF'; this.style.borderColor='var(--brand-terra)';" onmouseleave="this.style.background='var(--surface-sunken)'; this.style.color='var(--text-secondary)'; this.style.borderColor='var(--border-subtle)';">
+                  Ver Detalhes
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+              <?php else: ?>
+                <button type="button" onclick="openAuthPromptModal('ver_detalhes')" style="display: inline-flex; align-items: center; gap: 6px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 10px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;" onmouseenter="this.style.background='var(--brand-terra)'; this.style.color='#FFF'; this.style.borderColor='var(--brand-terra)';" onmouseleave="this.style.background='var(--surface-sunken)'; this.style.color='var(--text-secondary)'; this.style.borderColor='var(--border-subtle)';">
+                  Ver Detalhes
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              <?php endif; ?>
 
             </div>
 

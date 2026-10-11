@@ -127,6 +127,12 @@ c:/xampp/htdocs/djumbai/
   - Qualquer tentativa dispara o modal `auth_prompt_modal.php` com o título *"Desejas entrar ou participar?"*:
     - **Entrar (Fazer Login)** -> Encaminha para `/login`.
     - **Participar (Criar Conta Grátis)** -> Encaminha para `/cadastro`.
+- **Loop 6 — Mini-Mapa Visual de Ocorrências & Geolocalização:**
+  - As tabelas `provincias`, `bairros` e `problemas` possuem colunas de coordenadas (`latitude` e `longitude`).
+  - Cada ocorrência herda ou calcula coordenadas geográficas com dispersão/offset determinístico para evitar sobreposição no mesmo bairro.
+  - A rota `/mapa` disponibiliza um visualizador interativo em tela cheia com OpenStreetMap + Leaflet e marcadores nas cores da identidade Djumbai (Dendém, Baía, Capim e Terra).
+  - A rota `/api/mapa-ocorrencias` entrega dados JSON formatados com suporte a filtros dinâmicos (Província, Município, Categoria, Estado) sem recarregar a página.
+  - O visualizador destaca "Pontos Críticos" (alta incidência de confirmações comunitárias) com pulsação visual em anel e exibe resumo na Homepage (`/`) e na listagem de ocorrências (`/problemas`).
 
 ---
 

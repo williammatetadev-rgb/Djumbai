@@ -7,11 +7,14 @@
 // Define os caminhos absolutos do projecto
 define('ROOT_PATH', dirname(__DIR__));
 define('APP_PATH',  ROOT_PATH . '/app');
-define('BASE_URL',  '/djumbai/public');
 
 // 1. Carrega o gestor de variáveis de ambiente
 require_once APP_PATH . '/core/Env.php';
 Env::load(ROOT_PATH . '/.env');
+
+// Define o caminho base da URL (dinâmico para dev local ou deploy em produção)
+$urlPath = Env::get('APP_URL_PATH', '/djumbai/public');
+define('BASE_URL', rtrim($urlPath, '/'));
 
 // 2. Define o ambiente e configuração de erros
 $appEnv   = Env::get('APP_ENV', 'development');
@@ -140,6 +143,7 @@ $router->post('/problemas/{id}/comentar',    'ProblemaController', 'comentar');
 
 // ─── Painel Admin & Moderação ──────────────────────────────────
 $router->get( '/admin',                          'AdminController',    'dashboard');
+$router->get( '/admin/mapa',                     'AdminController',    'mapa');
 $router->get( '/admin/problemas',                'AdminController',    'problemas');
 $router->post('/admin/problemas/{id}/estado',     'AdminController',    'mudarEstado');
 $router->get( '/admin/usuarios',                 'AdminController',    'usuarios');

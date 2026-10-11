@@ -60,9 +60,13 @@ function openAuthPromptModal(reason) {
   const modal = document.getElementById('djumbaiAuthPromptModal');
   const sub = document.getElementById('authPromptModalSub');
   if (sub && reason === 'confirmar') {
-    sub.textContent = 'Para apoiar e validar ocorrencias no seu bairro, precisa de ter uma conta no Djumbai.';
+    sub.textContent = 'Para apoiar e validar ocorrências no seu bairro, precisa de ter uma conta no Djumbai.';
   } else if (sub && reason === 'comentar') {
     sub.textContent = 'Para publicar comentários ou participar na discussão comunitária, precisa de entrar na sua conta.';
+  } else if (sub && (reason === 'ver_detalhes' || reason === 'ocorrencia' || reason === 'mapa')) {
+    sub.textContent = 'Para aceder aos detalhes completos desta ocorrência e participar na resolução da comunidade, precisa de entrar na sua conta ou criar uma gratuitamente.';
+  } else if (sub && reason === 'reportar') {
+    sub.textContent = 'Para reportar um problema na sua comunidade e registar a ocorrência no sistema, precisa de ter uma conta no Djumbai.';
   }
   if (modal) modal.style.display = 'flex';
 }

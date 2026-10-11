@@ -254,7 +254,8 @@
   const selMunicipio = document.getElementById('regMunicipio');
   const selBairro = document.getElementById('regBairro');
 
-  if (selProvincia && selMunicipio && selBairro) {
+  // Só executa o mock estático se a página não tiver o motor de banco de dados dinâmico ativo
+  if (selProvincia && selMunicipio && selBairro && !document.getElementById('territoryRestrictionNotice')) {
     function populateMunicipios() {
       const provId = selProvincia.value;
       const prov = angolaGeoData[provId];

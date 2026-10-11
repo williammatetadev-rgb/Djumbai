@@ -129,6 +129,9 @@ class ProblemaController extends Controller
 
     public function show(int $id): void
     {
+        // Apenas utilizadores autenticados podem ver os detalhes completos de um reporte
+        $this->requireAuth();
+
         $id = (int) $id;
         if ($id <= 0) {
             http_response_code(404);

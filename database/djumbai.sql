@@ -109,18 +109,19 @@ CREATE TABLE estados_problema (
 CREATE TABLE user (
   id         INT UNSIGNED   NOT NULL AUTO_INCREMENT,
   nome       VARCHAR(100)   NOT NULL,
-  email      VARCHAR(150)   NOT NULL,
+  email      VARCHAR(150)            DEFAULT NULL,
   telefone   VARCHAR(20)             DEFAULT NULL,
+  bi_frente  VARCHAR(255)            DEFAULT NULL,
+  bi_verso   VARCHAR(255)            DEFAULT NULL,
   senha_hash VARCHAR(255)   NOT NULL,
   tipo       ENUM('cidadao','admin') NOT NULL DEFAULT 'cidadao',
-  status     ENUM('ativo','banido')   NOT NULL DEFAULT 'ativo',
-  ultimo_acesso DATETIME DEFAULT NULL,
   status     ENUM('ativo','banido')   NOT NULL DEFAULT 'ativo',
   ultimo_acesso DATETIME DEFAULT NULL,
   bairro_id  SMALLINT UNSIGNED       DEFAULT NULL,
   criado_em  DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_user_email (email),
+  UNIQUE KEY uq_user_telefone (telefone),
   KEY idx_user_bairro (bairro_id),
   KEY idx_user_tipo   (tipo),
   CONSTRAINT fk_user_bairro
@@ -341,10 +342,16 @@ INSERT INTO bairros (nome, municipio_id) VALUES
   ('Morro Bento', 2);  -- 17
 
 -- Município Cacuaco (municipio_id = 3)
-INSERT INTO bairros (nome, municipio_id) VALUES
-  ('Cacuaco Centro', 3),  -- 18
-  ('Funda',          3),  -- 19
-  ('Sequele',        3);  -- 20
+INSERT INTO bairros (id, nome, municipio_id) VALUES
+  (18, 'Cacuaco Sede / Vila', 3),
+  (19, 'Funda',               3),
+  (20, 'Cidade do Sequele',   3),
+  (40, 'Kicolo',              3),
+  (41, 'Bela Vista',          3),
+  (42, 'Vidrul',              3),
+  (43, 'Mulenvos de Cacuaco', 3),
+  (44, 'Cerâmica',            3),
+  (45, 'Balumuka',            3);
 
 -- Município Cazenga (municipio_id = 4)
 INSERT INTO bairros (nome, municipio_id) VALUES
@@ -403,7 +410,7 @@ INSERT INTO user (nome, email, telefone, senha_hash, tipo, bairro_id) VALUES
     -- senha: Admin@2026 (bcrypt cost 12)
     '$2y$12$Jb3PWVPoCidz8IhpwfxmNeKf9.KJjQYYmWKV0K5kGHsgIuwfLIfeu',
     'admin',
-    1   -- bairro: Alvalade
+    18  -- bairro: Cacuaco Sede / Vila
   ),
   (
     'Maria Kiluanje',
@@ -412,7 +419,7 @@ INSERT INTO user (nome, email, telefone, senha_hash, tipo, bairro_id) VALUES
     -- senha: Teste@2026
     '$2y$12$s2cDImI5WurFGatXxk8MOu7Rxd1.GOTr60OI73jB.S.IsxC878jZm',
     'cidadao',
-    4   -- bairro: Rangel
+    20  -- bairro: Cidade do Sequele
   ),
   (
     'João Mbemba',
@@ -421,7 +428,7 @@ INSERT INTO user (nome, email, telefone, senha_hash, tipo, bairro_id) VALUES
     -- senha: Teste@2026
     '$2y$12$s2cDImI5WurFGatXxk8MOu7Rxd1.GOTr60OI73jB.S.IsxC878jZm',
     'cidadao',
-    22  -- bairro: Hoji-ya-Henda
+    42  -- bairro: Vidrul
   ),
   (
     'Ana Tomás',
@@ -430,75 +437,66 @@ INSERT INTO user (nome, email, telefone, senha_hash, tipo, bairro_id) VALUES
     -- senha: Teste@2026
     '$2y$12$s2cDImI5WurFGatXxk8MOu7Rxd1.GOTr60OI73jB.S.IsxC878jZm',
     'cidadao',
-    13  -- bairro: Talatona
+    19  -- bairro: Funda
   );
 
--- ── Problemas de Teste ────────────────────────────────────
+-- ── Problemas de Teste (Cacuaco) ──────────────────────────
 INSERT INTO problemas
   (titulo, descricao, foto, referencia_local,
-   user_id, categoria_id, bairro_id, estado_id)
+   user_id, categoria_id, bairro_id, estado_id, latitude, longitude)
 VALUES
   (
-    'Buracos na via principal do Rangel',
-    'Há buracos enormes na estrada principal do Rangel, junto ao mercado. '
-    'Já causaram dois acidentes esta semana. As viaturas têm de fazer desvios '
-    'perigosos para evitar os buracos.',
+    'Postes de iluminação apagados no Bloco 8 do Sequele',
+    'Vários postes de iluminação pública estão sem energia ao longo da avenida do Bloco 8. À noite a visibilidade é quase nula e há registo de furtos a quem regressa tarde do trabalho.',
     NULL,
-    'Estrada principal do Rangel, em frente ao mercado municipal',
-    2, 2, 4, 1   -- Maria · Estradas · Rangel · Pendente
+    'Avenida Principal do Bloco 8, Cidade do Sequele, Cacuaco',
+    2, 3, 20, 1, -8.761200, 13.415000
   ),
   (
-    'Falta de água há 3 dias em Hoji-ya-Henda',
-    'O bairro de Hoji-ya-Henda está sem água há três dias consecutivos. '
-    'As cisternas da vizinhança já estão a esgotar. As famílias com crianças '
-    'pequenas e idosos estão a sofrer bastante.',
+    'Buraco profundo na Estrada Nacional junto à Vidrul',
+    'Cratera aberta na faixa direita em direção a Cacuaco Centro. As viaturas são forçadas a invadir a faixa contrária com perigo constante de colisão frontal.',
     NULL,
-    'Hoji-ya-Henda, bloco 14, rua B, próximo da escola',
-    2, 1, 22, 2  -- Maria · Água · Hoji-ya-Henda · Em análise
+    'Estrada de Cacuaco, 200m após o desvio da fábrica Vidrul',
+    3, 2, 42, 2, -8.775400, 13.368200
   ),
   (
-    'Iluminação pública apagada em Tala Hady',
-    'Mais de 10 candeeiros avariados na rua principal de Tala Hady. '
-    'À noite é muito perigoso, especialmente para as mulheres e crianças. '
-    'Já houve dois assaltos esta semana nessa zona.',
+    'Rotura de conduta com desperdício de água potável na Funda',
+    'Uma tubagem principal da EPAL rebentou perto da rotunda da Funda. A água está a jorrar há 48 horas enquanto várias casas da vizinhança continuam com as torneiras secas.',
     NULL,
-    'Rua do Mercado, Tala Hady, junto à paragem de candongueiros',
-    3, 3, 23, 2  -- João · Iluminação · Tala Hady · Em análise
+    'Rotunda de acesso à Vila da Funda, Cacuaco',
+    4, 1, 19, 2, -8.845100, 13.548700
   ),
   (
-    'Lixo acumulado há semanas em Mulenvos',
-    'O lixo acumula-se há mais de duas semanas na esquina principal. '
-    'O cheiro é insuportável e já se vêem ratos. As crianças brincam '
-    'perto dessa zona e é um risco de saúde pública.',
+    'Depósito irregular de lixo junto à paragem do Kicolo',
+    'Grande volume de resíduos acumulado que começa a obstruir a vala de drenagem e a berma da via. Cheiro intenso com proliferação de moscas próximo dos vendedores.',
     NULL,
-    'Esquina da rua 5 com rua 12, Mulenvos, Viana',
-    4, 4, 29, 1  -- Ana · Lixo · Mulenvos · Pendente
+    'Paragem do Kicolo, próximo da pedonal, Cacuaco',
+    2, 4, 40, 1, -8.798100, 13.342100
   ),
   (
-    'Canal de saneamento entupido em Benfica',
-    'O canal de escoamento das águas residuais junto à escola primária '
-    'de Benfica está completamente entupido. Na época das chuvas vai '
-    'transbordar e inundar as casas ao redor.',
+    'Vala de drenagem entupida na Bela Vista',
+    'A vala principal que recebe as águas pluviais está assoreada com terra e entulho. Risco de inundação de dezenas de residências com o aproximar das chuvas.',
     NULL,
-    'Junto à Escola Primária nº 3, Benfica, Belas',
-    4, 5, 16, 3  -- Ana · Saneamento · Benfica · Resolvido
+    'Rua da Missão, Bairro Bela Vista, Cacuaco',
+    3, 5, 41, 3, -8.782000, 13.355000
   );
 
 -- ── Confirmações ("Também acontece aqui") ─────────────────
 -- Regra: um utilizador não pode confirmar o seu próprio problema
 INSERT INTO confirmacoes (problema_id, user_id) VALUES
-  (1, 3), (1, 4),   -- Problema Buracos: confirmado por João e Ana
-  (2, 3),           -- Problema Água:    confirmado por João
-  (3, 2), (3, 4),   -- Problema Luz:     confirmado por Maria e Ana
-  (4, 2), (4, 3);   -- Problema Lixo:    confirmado por Maria e João
+  (1, 3), (1, 4),   -- Problema Iluminação Sequele: confirmado por João e Ana
+  (2, 2), (2, 4),   -- Problema Buraco Vidrul: confirmado por Maria e Ana
+  (3, 2), (3, 3),   -- Problema Água Funda: confirmado por Maria e João
+  (4, 3), (4, 4),   -- Problema Lixo Kicolo: confirmado por João e Ana
+  (5, 2), (5, 4);   -- Problema Drenagem Bela Vista: confirmado por Maria e Ana
 
 -- ── Comentários ───────────────────────────────────────────
 INSERT INTO comentarios (problema_id, user_id, texto) VALUES
-  (1, 3, 'Confirmo! O meu carro já ficou preso nesse buraco duas vezes esta semana.'),
-  (1, 4, 'A administração municipal já foi informada há um mês mas não houve qualquer resposta.'),
-  (2, 3, 'Também estamos sem água no bloco 16. Já ligámos para a EPAL mas sem resposta ainda.'),
-  (3, 2, 'Situação muito perigosa. Na semana passada assaltaram uma senhora mesmo nessa rua.'),
-  (4, 3, 'O camião de lixo não passa há 3 semanas nesta zona. Alguém sabe porquê?');
+  (1, 3, 'Confirmo! O trecho entre o bloco 7 e 8 fica completamente às escuras a partir das 19h.'),
+  (1, 4, 'Já foram reportados vários assaltos nessa mesma zona na semana passada.'),
+  (2, 2, 'Passei por lá ontem e quase rebentei o pneu. Muito perigoso à noite!'),
+  (3, 3, 'A pressão da água na Funda caiu a zero por causa dessa mesma rotura.'),
+  (4, 4, 'O lixo já está a invadir a faixa de rodagem na paragem do Kicolo.');
 
 -- ── Histórico de Estados ──────────────────────────────────
 -- Regista as mudanças de estado feitas pelo admin
@@ -507,24 +505,24 @@ INSERT INTO historico_estados
 VALUES
   -- Problema 2: Pendente → Em análise
   (2, 1, 2, 1,
-   'Problema reportado à EPAL. Técnicos agendados para avaliação no prazo de 48h.'),
+   'Problema reportado ao INEA e brigada municipal de conservação de estradas.'),
   -- Problema 3: Pendente → Em análise
   (3, 1, 2, 1,
-   'Reportado à EDEL. Brigada enviada para avaliação dos candeeiros avariados.'),
+   'Comunicação enviada à EPAL Cacuaco. Equipa técnica a caminho para reparação.'),
   -- Problema 5: Pendente → Resolvido
   (5, 1, 3, 1,
-   'Canal limpo pela brigada municipal em 01/10/2026. Problema verificado e resolvido.');
+   'Desobstrução e limpeza da vala concluída pelos serviços comunitários da Administração de Cacuaco.');
 
 -- ── Notificações ──────────────────────────────────────────
 INSERT INTO notificacoes (user_id, problema_id, mensagem, lida) VALUES
   (
-    2, 2,
-    'O estado do seu problema "Falta de água há 3 dias" foi actualizado para Em análise.',
+    3, 2,
+    'O estado do seu reporte "Buraco profundo na Estrada Nacional junto à Vidrul" foi actualizado para Em análise.',
     0   -- não lida
   ),
   (
-    4, 5,
-    'O seu problema "Canal de saneamento entupido em Benfica" foi marcado como Resolvido. Obrigado pela participação!',
+    3, 5,
+    'O seu reporte "Vala de drenagem entupida na Bela Vista" foi marcado como Resolvido pela Administração.',
     1   -- já lida
   );
 
