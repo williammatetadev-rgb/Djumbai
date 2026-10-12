@@ -36,30 +36,47 @@ class UserController extends Controller
         $notificacoes = $this->problemaModel->getNotificacoesUser($userId);
 
         // Agregação de Estatísticas Pessoais
-        $totalReportes  = count($meusReportes);
+        $totalReportes   = count($meusReportes);
         $totalResolvidos = 0;
         $totalEmAnalise  = 0;
         $totalPendentes  = 0;
+        $totalRejeitados = 0;
         $totalApoios     = 0;
+        $totalComentarios = 0;
 
         foreach ($meusReportes as $rep) {
             $totalApoios += (int) ($rep['total_confirmacoes'] ?? 0);
+            $totalComentarios += (int) ($rep['total_comentarios'] ?? 0);
             if ((int)$rep['estado_id'] === 3) $totalResolvidos++;
             elseif ((int)$rep['estado_id'] === 2) $totalEmAnalise++;
             elseif ((int)$rep['estado_id'] === 1) $totalPendentes++;
+            elseif ((int)$rep['estado_id'] === 4) $totalRejeitados++;
         }
 
+        // Cálculo de Score Cívico do Cidadão (0 a 100)
+        $score = 50;
+        $biStatus = $perfil['bi_status'] ?? 'nao_enviado';
+        if ($biStatus === 'verificado') $score += 30;
+        elseif ($biStatus === 'rejeitado') $score -= 20;
+        $score += min(20, $totalReportes * 4);
+        $score += min(10, (int)($perfil['total_confirmacoes'] ?? 0) * 2);
+        if (($perfil['status'] ?? 'ativo') === 'banido') $score = max(0, $score - 40);
+        $scoreCivico = min(100, max(0, $score));
+
         $this->render('user/dashboard', [
-            'titulo'          => 'Meu Painel – Djumbai',
-            'perfil'          => $perfil,
-            'meusReportes'    => $meusReportes,
-            'notificacoes'    => $notificacoes,
-            'totalReportes'   => $totalReportes,
-            'totalResolvidos' => $totalResolvidos,
-            'totalEmAnalise'  => $totalEmAnalise,
-            'totalPendentes'  => $totalPendentes,
-            'totalApoios'     => $totalApoios,
-            'isUserPanel'     => true,
+            'titulo'           => 'Meu Painel – Djumbai',
+            'perfil'           => $perfil,
+            'meusReportes'     => $meusReportes,
+            'notificacoes'     => $notificacoes,
+            'totalReportes'    => $totalReportes,
+            'totalResolvidos'  => $totalResolvidos,
+            'totalEmAnalise'   => $totalEmAnalise,
+            'totalPendentes'   => $totalPendentes,
+            'totalRejeitados'  => $totalRejeitados,
+            'totalApoios'      => $totalApoios,
+            'totalComentarios' => $totalComentarios,
+            'scoreCivico'      => $scoreCivico,
+            'isUserPanel'      => true,
         ], 'main');
     }
 
@@ -77,7 +94,24 @@ class UserController extends Controller
         $this->problemaModel->marcarNotificacaoLida($id, $userId);
 
         flash('success', 'Notificação marcada como lida.');
-        $this->redirect('/perfil');
+        $this->redirect('/perfil#notificacoes');
+    }
+
+    /**
+     * Marca todas as notificações do utilizador como lidas de uma só vez
+     */
+    public function marcarTodasLidas(): void
+    {
+        if (!verifyCsrf()) {
+            flash('error', 'Sessão expirada.');
+            $this->redirect('/perfil');
+        }
+
+        $userId = (int) $_SESSION['user_id'];
+        $this->problemaModel->marcarTodasNotificacoesLidas($userId);
+
+        flash('success', 'Todas as notificações foram marcadas como lidas.');
+        $this->redirect('/perfil#notificacoes');
     }
 
     /**
@@ -153,7 +187,53 @@ class UserController extends Controller
         $_SESSION['user_nome'] = $nome;
 
         flash('success', 'Os seus dados pessoais foram atualizados com sucesso!');
-        $this->redirect('/perfil');
+        $this->redirect('/perfil/definicoes');
+    }
+
+    /**
+     * Altera a palavra-passe do utilizador autenticado
+     */
+    public function alterarSenha(): void
+    {
+        if (!verifyCsrf()) {
+            flash('error', 'Sessão expirada. Por favor tente novamente.');
+            $this->redirect('/perfil/definicoes');
+        }
+
+        $userId        = (int) $_SESSION['user_id'];
+        $senhaAtual    = $_POST['senha_atual'] ?? '';
+        $novaSenha     = $_POST['nova_senha'] ?? '';
+        $confirmaSenha = $_POST['confirma_senha'] ?? '';
+
+        $user = $this->userModel->findById($userId);
+        if (!$user || !password_verify($senhaAtual, $user['senha_hash'])) {
+            flash('error_senha', 'A palavra-passe atual inserida está incorreta.');
+            $this->redirect('/perfil/definicoes');
+        }
+
+        if (strlen($novaSenha) < 8) {
+            flash('error_senha', 'A nova palavra-passe deve conter pelo menos 8 caracteres.');
+            $this->redirect('/perfil/definicoes');
+        }
+
+        if (!preg_match('/[A-Za-z]/', $novaSenha) || !preg_match('/[0-9]/', $novaSenha)) {
+            flash('error_senha', 'A nova palavra-passe deve conter pelo menos uma letra e um número.');
+            $this->redirect('/perfil/definicoes');
+        }
+
+        if ($novaSenha !== $confirmaSenha) {
+            flash('error_senha', 'A confirmação não coincide com a nova palavra-passe.');
+            $this->redirect('/perfil/definicoes');
+        }
+
+        $this->userModel->alterarSenha($userId, $novaSenha);
+
+        SecurityLogger::log('USER_PASSWORD_CHANGED', "Utilizador #{$userId} alterou a sua palavra-passe", [
+            'user_id' => $userId
+        ]);
+
+        flash('success', 'A sua palavra-passe foi alterada com sucesso!');
+        $this->redirect('/perfil/definicoes');
     }
 
     /**

@@ -22,6 +22,17 @@ function sanitizeString(string $input): string
 }
 
 /**
+ * Sanitiza e normaliza um endereço de e-mail.
+ * Retorna string vazia se o formato for inválido.
+ */
+function sanitizeEmail(string $input): string
+{
+    $email = strtolower(trim($input));
+    return (string)(filter_var($email, FILTER_SANITIZE_EMAIL) ?: '');
+}
+
+
+/**
  * Gera a URL completa segura
  */
 function url(string $path = ''): string
@@ -201,9 +212,12 @@ function isCurrentPage(string $path): bool
  */
 function icon(string $name, int $size = 16, string $class = '', string $color = 'currentColor'): string
 {
-    $path = ROOT_PATH . '/public/assets/icons/' . $name . '.svg';
+    $path = ROOT_PATH . '/public/icons/' . $name . '.svg';
     if (!file_exists($path)) {
-        return '';
+        $path = ROOT_PATH . '/public/assets/icons/' . $name . '.svg';
+        if (!file_exists($path)) {
+            return '';
+        }
     }
     $svg = file_get_contents($path);
     $svg = preg_replace('/width="\d+"/', 'width="' . $size . '"', $svg);

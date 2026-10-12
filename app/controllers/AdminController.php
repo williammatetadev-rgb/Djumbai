@@ -245,12 +245,146 @@ class AdminController extends Controller
 
     public function usuarios(): void
     {
-        $utilizadores = $this->userModel->listarComEstatisticas();
+        $aba = sanitizeString($_GET['aba'] ?? 'cidadaos');
+        if (!in_array($aba, ['cidadaos', 'verificacoes', 'equipa'], true)) {
+            $aba = 'cidadaos';
+        }
+
+        $busca       = sanitizeString($_GET['q'] ?? '');
+        $status      = sanitizeString($_GET['status'] ?? '');
+        $bi          = sanitizeString($_GET['bi'] ?? '');
+        $municipioId = (int) ($_GET['municipio'] ?? 0);
+
+        // Se estiver na aba de verificações e sem filtro explícito, focar nos pendentes
+        if ($aba === 'verificacoes' && empty($bi)) {
+            $bi = 'pendente';
+        }
+
+        $cidadaos = $this->userModel->listarComEstatisticas($busca, $status, $bi, $municipioId, 'cidadao');
+        $equipaBruta = $this->userModel->listarComEstatisticas($busca, $status, '', 0, 'admin');
+
+        // O Administrador Principal (Super Admin / Conta Raiz) não aparece na tabela operacional da equipa
+        $equipa = array_values(array_filter($equipaBruta, fn($adm) => $adm['email'] !== 'admin@djumbai.ao' && (int)$adm['id'] !== 1));
+
+        // Contagens globais para badges das abas
+        $todosCidadaos    = $this->userModel->listarComEstatisticas('', '', '', 0, 'cidadao');
+        $totalPendentesBi = count(array_filter($todosCidadaos, fn($u) => ($u['bi_status'] ?? '') === 'pendente'));
+
+        $db = Database::getInstance();
+        $municipios = $db->query("SELECT id, nome FROM municipios ORDER BY nome ASC")->fetchAll();
 
         $this->render('admin/usuarios', [
-            'titulo'       => 'Gestão de Utilizadores & Moderação – Djumbai',
-            'utilizadores' => $utilizadores,
+            'titulo'           => 'Gestão de Utilizadores, Verificação & Equipa – Djumbai',
+            'aba'              => $aba,
+            'cidadaos'         => $cidadaos,
+            'equipa'           => $equipa,
+            'totalCidadaos'    => count($todosCidadaos),
+            'totalPendentesBi' => $totalPendentesBi,
+            'totalEquipa'      => count($equipa),
+            'municipios'       => $municipios,
+            'filtros'          => [
+                'q'         => $busca,
+                'status'    => $status,
+                'bi'        => $bi,
+                'municipio' => $municipioId,
+            ],
         ], 'admin');
+    }
+
+    public function avaliarDocumentoBi(int $id): void
+    {
+        if (!verifyCsrf()) {
+            flash('error', 'Token de segurança inválido.');
+            $this->redirect('/admin/usuarios?aba=verificacoes');
+        }
+
+        $acao       = sanitizeString($_POST['acao'] ?? '');
+        $motivo     = sanitizeString($_POST['motivo'] ?? '');
+        $abaOrigem  = sanitizeString($_POST['aba'] ?? 'verificacoes');
+        $novoStatus = ($acao === 'aprovar') ? 'verificado' : 'rejeitado';
+
+        $user = $this->userModel->findById($id);
+        if (!$user) {
+            flash('error', 'Utilizador não encontrado.');
+            $this->redirect('/admin/usuarios?aba=' . urlencode($abaOrigem));
+        }
+
+        $sucesso = $this->userModel->avaliarDocumentoBI($id, $novoStatus, $motivo, (int)$_SESSION['user_id']);
+
+        if ($sucesso) {
+            SecurityLogger::log('ADMIN_BI_EVALUATED', "BI do utilizador #{$id} ({$user['nome']}) avaliado como {$novoStatus}", [
+                'target_user_id' => $id,
+                'resultado'      => $novoStatus,
+                'motivo'         => $motivo,
+                'admin_id'       => $_SESSION['user_id']
+            ]);
+
+            $msg = ($novoStatus === 'verificado')
+                ? "Documento de '{$user['nome']}' aprovado com sucesso! Selo de Munícipe Verificado atribuído."
+                : "Documento de '{$user['nome']}' recusado e notificação enviada.";
+            flash('success', $msg);
+        } else {
+            flash('error', 'Não foi possível atualizar o estado de verificação.');
+        }
+
+        $this->redirect('/admin/usuarios?aba=' . urlencode($abaOrigem));
+    }
+
+    public function criarAdmin(): void
+    {
+        if (!verifyCsrf()) {
+            flash('error', 'Token de segurança inválido.');
+            $this->redirect('/admin/usuarios?aba=equipa');
+        }
+
+        $nome     = sanitizeString($_POST['nome'] ?? '');
+        $email    = sanitizeEmail($_POST['email'] ?? '');
+        $telefone = sanitizeString($_POST['telefone'] ?? '');
+        $senha    = $_POST['senha'] ?? '';
+
+        if (mb_strlen($nome, 'UTF-8') < 3) {
+            flash('error', 'O nome do administrador deve ter pelo menos 3 caracteres.');
+            $this->redirect('/admin/usuarios?aba=equipa');
+        }
+
+        if (!isValidEmail($email)) {
+            flash('error', 'Por favor insira um endereço de e-mail institucional válido.');
+            $this->redirect('/admin/usuarios?aba=equipa');
+        }
+
+        if ($this->userModel->emailExists($email)) {
+            flash('error', 'Este e-mail já está em utilização por outro utilizador.');
+            $this->redirect('/admin/usuarios?aba=equipa');
+        }
+
+        if (!empty($telefone) && !isValidAngolaPhone($telefone)) {
+            flash('error', 'Insira um número de telefone válido de Angola.');
+            $this->redirect('/admin/usuarios?aba=equipa');
+        }
+
+        if (mb_strlen($senha, 'UTF-8') < 8) {
+            flash('error', 'A palavra-passe deve conter pelo menos 8 caracteres.');
+            $this->redirect('/admin/usuarios?aba=equipa');
+        }
+
+        $adminId = $this->userModel->criarAdministrador($nome, $email, $senha, $telefone);
+
+        SecurityLogger::log('ADMIN_CREATED', "Nova conta administrativa registada para {$email}", [
+            'novo_admin_id' => $adminId,
+            'criado_por'    => $_SESSION['user_id']
+        ]);
+
+        flash('success', "Novo administrador '{$nome}' adicionado à equipa com sucesso.");
+        $this->redirect('/admin/usuarios?aba=equipa');
+    }
+
+    public function dossieUsuario(int $id): void
+    {
+        $dossie = $this->userModel->getDossieCompleto($id);
+        if (!$dossie) {
+            $this->json(['error' => 'Utilizador não encontrado.'], 404);
+        }
+        $this->json($dossie);
     }
 
     public function toggleBan(int $id): void
@@ -381,9 +515,13 @@ class AdminController extends Controller
         $mime = finfo_file($finfo, $caminho);
         finfo_close($finfo);
 
+        $nomeSeguro = basename($arquivo);
         header('Content-Type: ' . ($mime ?: 'application/octet-stream'));
+        // Forçar download (attachment) para impedir que PDFs com JS sejam renderizados inline
+        header('Content-Disposition: attachment; filename="' . $nomeSeguro . '"');
         header('Content-Length: ' . filesize($caminho));
-        header('Cache-Control: private, max-age=3600');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-cache, no-store');
         readfile($caminho);
         exit;
     }
@@ -489,5 +627,128 @@ class AdminController extends Controller
 
         flash('success', 'Definições da plataforma guardadas com sucesso.');
         $this->redirect('/admin/definicoes');
+    }
+
+    // ── REPORTAR OCORRÊNCIA PELO ADMIN (SEM SAIR PARA O FRONTEND) ─────────
+
+    public function reportarForm(): void
+    {
+        $categorias = $this->categoriaModel->findAll();
+        $db         = Database::getInstance();
+        $provincias = $db->query("SELECT id, nome FROM provincias ORDER BY nome ASC")->fetchAll();
+
+        $this->render('admin/reportar', [
+            'titulo'     => 'Registo Oficial de Ocorrência – Djumbai Admin',
+            'categorias' => $categorias,
+            'provincias' => $provincias,
+            'errors'     => [],
+            'old'        => [],
+        ], 'admin_reportar');
+    }
+
+    public function guardarReporte(): void
+    {
+        if (!verifyCsrf()) {
+            flash('error', 'Token de segurança inválido. Tente novamente.');
+            $this->redirect('/admin/reportar');
+        }
+
+        $titulo          = sanitizeString($_POST['titulo'] ?? '');
+        $descricao       = sanitizeString($_POST['descricao'] ?? '');
+        $referenciaLocal = sanitizeString($_POST['referencia_local'] ?? '');
+        $categoriaId     = (int) ($_POST['categoria_id'] ?? 0);
+        $bairroId        = (int) ($_POST['bairro_id'] ?? 0);
+
+        $errors = [];
+
+        if (mb_strlen($titulo, 'UTF-8') < 5 || mb_strlen($titulo, 'UTF-8') > 150) {
+            $errors['titulo'] = 'O título deve ter entre 5 e 150 caracteres.';
+        }
+
+        if (mb_strlen($descricao, 'UTF-8') < 10) {
+            $errors['descricao'] = 'A descrição deve ter pelo menos 10 caracteres.';
+        }
+
+        if ($categoriaId <= 0) {
+            $errors['categoria'] = 'Seleccione uma categoria técnica válida.';
+        }
+
+        if ($bairroId <= 0) {
+            $errors['bairro'] = 'Seleccione a localização territorial da ocorrência.';
+        }
+
+        // Upload de imagem opcional
+        $fotoPath = null;
+        if (!empty($_FILES['foto']['name']) && $_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $maxBytes     = 5 * 1024 * 1024; // 5 MB
+            $allowedExts  = ['jpg', 'jpeg', 'png', 'webp'];
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+
+            $file    = $_FILES['foto'];
+            $rawExt  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+            if ($file['size'] > $maxBytes) {
+                $errors['foto'] = 'A fotografia não pode exceder 5 MB.';
+            } elseif (!in_array($rawExt, $allowedExts, true)) {
+                $errors['foto'] = 'Formato não suportado. Apenas JPG, PNG ou WebP.';
+            } else {
+                $finfo    = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeType = finfo_file($finfo, $file['tmp_name']);
+                finfo_close($finfo);
+
+                if (!in_array($mimeType, $allowedMimes, true)) {
+                    $errors['foto'] = 'Tipo MIME de imagem inválido.';
+                } else {
+                    $uploadDir = ROOT_PATH . '/public/assets/images/uploads/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    $safeExt    = ($rawExt === 'jpeg') ? 'jpg' : $rawExt;
+                    $uniqueName = 'admin_prob_' . bin2hex(random_bytes(16)) . '.' . $safeExt;
+                    $targetFile = $uploadDir . $uniqueName;
+
+                    if (move_uploaded_file($file['tmp_name'], $targetFile)) {
+                        $fotoPath = 'uploads/' . $uniqueName;
+                    } else {
+                        $errors['foto'] = 'Erro ao guardar fotografia no servidor.';
+                    }
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            $categorias = $this->categoriaModel->findAll();
+            $db         = Database::getInstance();
+            $provincias = $db->query("SELECT id, nome FROM provincias ORDER BY nome ASC")->fetchAll();
+
+            $this->render('admin/reportar', [
+                'titulo'     => 'Registo Oficial de Ocorrência – Djumbai Admin',
+                'categorias' => $categorias,
+                'provincias' => $provincias,
+                'errors'     => $errors,
+                'old'        => compact('titulo', 'descricao', 'referenciaLocal', 'categoriaId'),
+            ], 'admin_reportar');
+            return;
+        }
+
+        $problemaId = $this->problemaModel->create([
+            'titulo'           => $titulo,
+            'descricao'        => $descricao,
+            'foto'             => $fotoPath,
+            'referencia_local' => $referenciaLocal ?: null,
+            'user_id'          => (int) $_SESSION['user_id'],
+            'categoria_id'     => $categoriaId,
+            'bairro_id'        => $bairroId,
+            'estado_id'        => 1, // Pendente / Aberto
+            'criado_em'        => date('Y-m-d H:i:s'),
+        ]);
+
+        SecurityLogger::log('ADMIN_PROBLEM_CREATED', "Nova ocorrência oficial registada pelo administrador ID #{$_SESSION['user_id']}", [
+            'problema_id' => $problemaId,
+            'admin_id'    => $_SESSION['user_id']
+        ]);
+
+        flash('success', "Ocorrência '{$titulo}' registada com sucesso no Centro de Gestão!");
+        $this->redirect('/admin/problemas');
     }
 }

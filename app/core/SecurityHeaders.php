@@ -25,10 +25,10 @@ class SecurityHeaders
         header('Referrer-Policy: strict-origin-when-cross-origin');
 
         // 4. Desativa APIs sensíveis do navegador não utilizadas
-        header('Permissions-Policy: camera=(), microphone=(), payment=(), usb=()');
+        // camera=self é necessário para digitalização de BI em definições do utilizador
+        header('Permissions-Policy: camera=(self), microphone=(), payment=(), usb=()');
 
-        // 5. Proteção XSS legada para navegadores antigos
-        header('X-XSS-Protection: 1; mode=block');
+        // X-XSS-Protection foi depreciado e removido dos navegadores modernos (não usar)
 
         // 6. Content Security Policy (CSP) robusta e compatível com SVGs/CSS locais
         $csp = [

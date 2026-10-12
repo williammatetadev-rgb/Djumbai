@@ -295,11 +295,13 @@ class ProblemaController extends Controller
 
     public function confirmar(int $id): void
     {
-        $this->requireAuth();
+        if (empty($_SESSION['user_id'])) {
+            $this->json(['erro' => 'Inicie sessão para apoiar esta ocorrência.', 'auth_required' => true], 401);
+        }
 
         // 1. Proteção CSRF (aceita tanto formulário quanto header X-CSRF-Token)
         if (!verifyCsrf()) {
-            $this->json(['erro' => 'Token de segurança inválido.'], 403);
+            $this->json(['erro' => 'Sessão expirada ou token de segurança inválido. Recarregue a página.'], 403);
         }
 
         // 2. Rate limiting em votações

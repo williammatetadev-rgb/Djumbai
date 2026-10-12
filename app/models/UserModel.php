@@ -103,6 +103,16 @@ class UserModel extends Model
     }
 
     /**
+     * Atualiza a palavra-passe do utilizador
+     */
+    public function alterarSenha(int $id, string $novaSenha): bool
+    {
+        $hash = password_hash($novaSenha, PASSWORD_BCRYPT);
+        $stmt = $this->db->prepare("UPDATE user SET senha_hash = :hash WHERE id = :id");
+        return $stmt->execute([':hash' => $hash, ':id' => $id]);
+    }
+
+    /**
      * Atualiza o carimbo de data/hora do último acesso
      */
     public function updateUltimoAcesso(int $id): void
@@ -130,7 +140,9 @@ class UserModel extends Model
     {
         $stmt = $this->db->prepare("
             SELECT
-                u.id, u.nome, u.email, u.telefone, u.bi_frente, u.bi_verso, u.tipo, u.status, u.ultimo_acesso, u.criado_em,
+                u.id, u.nome, u.email, u.telefone, u.bi_frente, u.bi_verso, 
+                u.bi_status, u.bi_nota, u.bi_avaliado_em,
+                u.tipo, u.status, u.ultimo_acesso, u.criado_em,
                 b.nome  AS bairro,
                 m.nome  AS municipio,
                 p.nome  AS provincia,
@@ -151,27 +163,189 @@ class UserModel extends Model
     }
 
     /**
-     * Lista todos os utilizadores com estatísticas (para o admin)
+     * Lista todos os utilizadores com estatísticas e filtros (para o admin)
      */
-    public function listarComEstatisticas(): array
-    {
-        $stmt = $this->db->query("
+    public function listarComEstatisticas(
+        string $busca = '',
+        string $filtroStatus = '',
+        string $filtroBi = '',
+        int $municipioId = 0,
+        string $tipo = 'cidadao'
+    ): array {
+        $where = ['1 = 1'];
+        $params = [];
+
+        if ($tipo !== 'todos') {
+            $where[] = 'u.tipo = :tipo';
+            $params[':tipo'] = $tipo;
+        }
+
+        if (!empty($filtroStatus)) {
+            $where[] = 'u.status = :status';
+            $params[':status'] = $filtroStatus;
+        }
+
+        if (!empty($filtroBi)) {
+            $where[] = 'u.bi_status = :bi_status';
+            $params[':bi_status'] = $filtroBi;
+        }
+
+        if ($municipioId > 0) {
+            $where[] = 'b.municipio_id = :mun_id';
+            $params[':mun_id'] = $municipioId;
+        }
+
+        $busca = trim($busca);
+        if ($busca !== '') {
+            $where[] = '(u.nome LIKE :busca OR u.email LIKE :busca OR u.telefone LIKE :busca)';
+            $params[':busca'] = '%' . $busca . '%';
+        }
+
+        $whereClause = implode(' AND ', $where);
+
+        $sql = "
             SELECT
-                u.id, u.nome, u.email, u.telefone, u.bi_frente, u.bi_verso, u.tipo, u.status, u.ultimo_acesso, u.criado_em,
+                u.id, u.nome, u.email, u.telefone, 
+                u.bi_frente, u.bi_verso, u.bi_status, u.bi_nota, u.bi_avaliado_em,
+                u.tipo, u.status, u.ultimo_acesso, u.criado_em,
                 b.nome AS bairro_nome,
                 m.nome AS municipio_nome,
+                p.nome AS provincia_nome,
                 COUNT(DISTINCT pr.id)  AS total_reportes,
                 COUNT(DISTINCT com.id) AS total_comentarios
             FROM user u
             LEFT JOIN bairros    b   ON b.id   = u.bairro_id
             LEFT JOIN municipios m   ON m.id   = b.municipio_id
+            LEFT JOIN provincias p   ON p.id   = m.provincia_id
             LEFT JOIN problemas  pr  ON pr.user_id  = u.id
             LEFT JOIN comentarios com ON com.user_id = u.id
-            WHERE u.tipo = 'cidadao'
+            WHERE {$whereClause}
             GROUP BY u.id
             ORDER BY u.criado_em DESC
-        ");
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        foreach ($params as $k => $v) {
+            if ($k === ':mun_id') {
+                $stmt->bindValue($k, $v, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($k, $v, PDO::PARAM_STR);
+            }
+        }
+        $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Avalia e decide sobre o documento de identificação (BI) do cidadão
+     */
+    public function avaliarDocumentoBI(int $userId, string $novoBiStatus, ?string $nota, int $adminId): bool
+    {
+        if (!in_array($novoBiStatus, ['verificado', 'rejeitado', 'pendente', 'nao_enviado'], true)) {
+            return false;
+        }
+
+        $stmt = $this->db->prepare("
+            UPDATE user 
+            SET bi_status = :status, bi_nota = :nota, bi_avaliado_em = NOW()
+            WHERE id = :id
+        ");
+        $res = $stmt->execute([
+            ':status' => $novoBiStatus,
+            ':nota'   => $nota ?: null,
+            ':id'     => $userId,
+        ]);
+
+        if ($res) {
+            // Disparar notificação ao cidadão
+            $msg = ($novoBiStatus === 'verificado')
+                ? "Parabéns! O seu Bilhete de Identidade foi verificado com sucesso. O seu perfil agora possui o Selo Cívico Verificado!"
+                : "A verificação do seu Bilhete de Identidade foi rejeitada pela moderação. " . ($nota ? "Motivo: {$nota}" : "Por favor reenvie imagens legíveis nas definições do seu perfil.");
+
+            $stmtNotif = $this->db->prepare("
+                INSERT INTO notificacoes (user_id, problema_id, mensagem, lida, criado_em)
+                VALUES (:uid, 1, :msg, 0, NOW())
+            ");
+            $stmtNotif->execute([':uid' => $userId, ':msg' => $msg]);
+        }
+
+        return $res;
+    }
+
+    /**
+     * Retorna o dossiê completo de um utilizador (para a ficha cívica detalhada)
+     */
+    public function getDossieCompleto(int $userId): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT
+                u.id, u.nome, u.email, u.telefone, 
+                u.bi_frente, u.bi_verso, u.bi_status, u.bi_nota, u.bi_avaliado_em,
+                u.tipo, u.status, u.ultimo_acesso, u.criado_em,
+                b.nome AS bairro_nome,
+                m.nome AS municipio_nome,
+                p.nome AS provincia_nome,
+                COUNT(DISTINCT pr.id)  AS total_reportes,
+                COUNT(DISTINCT com.id) AS total_comentarios,
+                COUNT(DISTINCT cf.id)  AS total_confirmacoes
+            FROM user u
+            LEFT JOIN bairros      b   ON b.id   = u.bairro_id
+            LEFT JOIN municipios   m   ON m.id   = b.municipio_id
+            LEFT JOIN provincias   p   ON p.id   = m.provincia_id
+            LEFT JOIN problemas    pr  ON pr.user_id  = u.id
+            LEFT JOIN comentarios  com ON com.user_id = u.id
+            LEFT JOIN confirmacoes cf  ON cf.user_id  = u.id
+            WHERE u.id = :id
+            GROUP BY u.id
+        ");
+        $stmt->execute([':id' => $userId]);
+        $user = $stmt->fetch();
+        if (!$user) return null;
+
+        // Buscar ocorrências abertas pelo utilizador
+        $stmtProbs = $this->db->prepare("
+            SELECT pr.id, pr.titulo, pr.criado_em, pr.estado_id, e.nome AS estado_nome, e.cor AS estado_cor,
+                   COUNT(cf.id) AS total_confirmacoes
+            FROM problemas pr
+            JOIN estados_problema e ON e.id = pr.estado_id
+            LEFT JOIN confirmacoes cf ON cf.problema_id = pr.id
+            WHERE pr.user_id = :id
+            GROUP BY pr.id
+            ORDER BY pr.criado_em DESC
+            LIMIT 5
+        ");
+        $stmtProbs->execute([':id' => $userId]);
+        $user['ocorrencias_recentes'] = $stmtProbs->fetchAll();
+
+        // Cálculo de Score de Confiabilidade Cívica (0 a 100)
+        $score = 50; // Base inicial
+        if ($user['bi_status'] === 'verificado') $score += 30;
+        elseif ($user['bi_status'] === 'rejeitado') $score -= 20;
+        $score += min(20, (int)$user['total_reportes'] * 4);
+        $score += min(10, (int)$user['total_confirmacoes'] * 2);
+        if ($user['status'] === 'banido') $score = max(0, $score - 40);
+        $user['reputacao_score'] = min(100, max(0, $score));
+
+        return $user;
+    }
+
+    /**
+     * Cria uma nova conta administrativa
+     */
+    public function criarAdministrador(string $nome, string $email, string $senha, ?string $telefone = null): int
+    {
+        $hash = password_hash($senha, PASSWORD_BCRYPT);
+        $stmt = $this->db->prepare("
+            INSERT INTO user (nome, email, telefone, senha_hash, tipo, status, criado_em)
+            VALUES (:nome, :email, :tel, :hash, 'admin', 'ativo', NOW())
+        ");
+        $stmt->execute([
+            ':nome'  => $nome,
+            ':email' => $email,
+            ':tel'   => $telefone ?: null,
+            ':hash'  => $hash,
+        ]);
+        return (int) $this->db->lastInsertId();
     }
 
     /**
@@ -200,13 +374,22 @@ class UserModel extends Model
             $probIds = $stmtProbs->fetchAll(PDO::FETCH_COLUMN);
 
             if (!empty($probIds)) {
-                $in = implode(',', array_map('intval', $probIds));
-                $this->db->exec("DELETE FROM confirmacoes WHERE problema_id IN ($in)");
-                $this->db->exec("DELETE FROM comentarios WHERE problema_id IN ($in)");
-                $this->db->exec("DELETE FROM notificacoes WHERE problema_id IN ($in)");
-                $this->db->exec("DELETE FROM historico_estados WHERE problema_id IN ($in)");
-                $this->db->exec("DELETE FROM problemas WHERE user_id = {$id}");
+                $placeholders = implode(',', array_fill(0, count($probIds), '?'));
+                $stmtDel = $this->db->prepare("DELETE FROM confirmacoes WHERE problema_id IN ($placeholders)");
+                $stmtDel->execute($probIds);
+
+                $stmtDel = $this->db->prepare("DELETE FROM comentarios WHERE problema_id IN ($placeholders)");
+                $stmtDel->execute($probIds);
+
+                $stmtDel = $this->db->prepare("DELETE FROM notificacoes WHERE problema_id IN ($placeholders)");
+                $stmtDel->execute($probIds);
+
+                $stmtDel = $this->db->prepare("DELETE FROM historico_estados WHERE problema_id IN ($placeholders)");
+                $stmtDel->execute($probIds);
             }
+
+            $stmtDelProb = $this->db->prepare("DELETE FROM problemas WHERE user_id = :uid");
+            $stmtDelProb->execute([':uid' => $id]);
 
             // 5. Eliminar utilizador (apenas se não for admin)
             $stmt = $this->db->prepare("DELETE FROM user WHERE id = :uid AND tipo != 'admin'");
@@ -228,7 +411,7 @@ class UserModel extends Model
      */
     public function atualizarDocumentosBI(int $userId, string $biFrente, string $biVerso): bool
     {
-        $stmt = $this->db->prepare("UPDATE user SET bi_frente = :frente, bi_verso = :verso WHERE id = :id");
+        $stmt = $this->db->prepare("UPDATE user SET bi_frente = :frente, bi_verso = :verso, bi_status = 'pendente', bi_nota = NULL WHERE id = :id");
         return $stmt->execute([
             ':frente' => $biFrente,
             ':verso'  => $biVerso,

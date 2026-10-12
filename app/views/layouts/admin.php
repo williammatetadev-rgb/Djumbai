@@ -55,6 +55,13 @@
       </div>
     </a>
 
+    <a href="<?= url('admin/reportar') ?>" class="admin-nav-item <?= isCurrentPage('/admin/reportar') ? 'is-active' : '' ?>">
+      <div class="admin-nav-item__left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span>Registar Ocorrência</span>
+      </div>
+    </a>
+
     <a href="<?= url('admin/mapa') ?>" class="admin-nav-item <?= isCurrentPage('/admin/mapa') ? 'is-active' : '' ?>">
       <div class="admin-nav-item__left">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>

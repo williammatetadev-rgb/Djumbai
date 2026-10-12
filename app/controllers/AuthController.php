@@ -95,13 +95,13 @@ class AuthController extends Controller
 
         // 3.1 Verificação de suspensão / banimento
         if (($user['status'] ?? 'ativo') === 'banido') {
-            SecurityLogger::log('BANNED_USER_LOGIN_ATTEMPT', "Tentativa de login de utilizador banido: {$email}");
+            SecurityLogger::log('BANNED_USER_LOGIN_ATTEMPT', "Tentativa de login de utilizador banido: {$identificador}");
 
             $this->render('auth/login', [
                 'titulo'       => 'Entrar – Djumbai',
                 'errors'       => [],
                 'global_error' => 'A sua conta foi suspensa por violação das regras da comunidade Djumbai. Entre em contacto com a administração se pensa tratar-se de um erro.',
-                'old'          => ['email' => $email],
+                'old'          => ['email' => $identificador],
                 'hideFooter'   => true,
             ]);
             return;
@@ -249,9 +249,11 @@ class AuthController extends Controller
             $biVersoPath = $this->processarUploadDocumento($_FILES['bi_verso'], 'bi_verso', $errors);
         }
 
-        // Política de senha segura: mínimo 6 caracteres
-        if (strlen($senha) < 6) {
-            $errors['senha'] = 'A palavra-passe deve conter pelo menos 6 caracteres para sua segurança.';
+        // Política de senha segura: mínimo 8 caracteres com letra e número
+        if (strlen($senha) < 8) {
+            $errors['senha'] = 'A palavra-passe deve conter pelo menos 8 caracteres para sua segurança.';
+        } elseif (!preg_match('/[A-Za-z]/', $senha) || !preg_match('/[0-9]/', $senha)) {
+            $errors['senha'] = 'A palavra-passe deve conter pelo menos uma letra e um número.';
         }
 
         if ($senha !== $confirma) {

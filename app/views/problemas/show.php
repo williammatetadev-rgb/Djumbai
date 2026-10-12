@@ -250,7 +250,7 @@
           
           <!-- Contagem de Apoios -->
           <div style="text-align: center; padding-bottom: 18px; border-bottom: 1px solid var(--border-subtle);">
-            <div style="font-size: 2.2rem; font-weight: 800; color: var(--brand-baia); line-height: 1; margin-bottom: 4px;">
+            <div class="js-show-vote-total" style="font-size: 2.2rem; font-weight: 800; color: var(--brand-baia); line-height: 1; margin-bottom: 4px;">
               <?= number_format($problema['total_confirmacoes']) ?>
             </div>
             <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Moradores Apoiaram</span>

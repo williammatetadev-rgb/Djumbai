@@ -581,6 +581,17 @@ class ProblemaModel extends Model
     }
 
     /**
+     * Marca todas as notificações do utilizador como lidas
+     */
+    public function marcarTodasNotificacoesLidas(int $userId): void
+    {
+        $stmt = $this->db->prepare("
+            UPDATE notificacoes SET lida = 1 WHERE user_id = :user_id AND lida = 0
+        ");
+        $stmt->execute([':user_id' => $userId]);
+    }
+
+    /**
      * Cria uma nova notificação para um utilizador
      */
     public function criarNotificacao(int $userId, ?int $problemaId, string $mensagem): void

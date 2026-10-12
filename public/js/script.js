@@ -187,12 +187,18 @@
           },
         });
 
-        if (res.status === 401 || res.status === 403) {
+        if (res.status === 401) {
           if (typeof window.openAuthPromptModal === 'function') {
             window.openAuthPromptModal('confirmar');
           } else {
             window.showToast('Inicie sessão para confirmar este problema.', 'warning');
           }
+          return;
+        }
+
+        if (res.status === 403) {
+          const errData = await res.json().catch(() => ({}));
+          window.showToast(errData.erro || 'Sessão expirada. Recarregue a página.', 'warning');
           return;
         }
 
@@ -212,11 +218,29 @@
           countEl.textContent = data.total;
         }
 
+        // Atualizar contador de votos na página de detalhe (show.php)
+        const showTotalEl = document.querySelector('.js-show-vote-total');
+        if (showTotalEl && typeof data.total !== 'undefined') {
+          showTotalEl.textContent = data.total;
+        }
+
+        const labelSpan = voteBtn.querySelector('span:not(.js-vote-count)');
+
         if (data.confirmado) {
           voteBtn.classList.add('is-voted');
+          if (voteBtn.classList.contains('btn--primary')) {
+            voteBtn.classList.remove('btn--primary');
+            voteBtn.classList.add('btn--secondary');
+          }
+          if (labelSpan) labelSpan.textContent = 'Apoiado por si';
           window.showToast('Confirmação registada com sucesso!', 'success');
         } else {
           voteBtn.classList.remove('is-voted');
+          if (voteBtn.classList.contains('btn--secondary')) {
+            voteBtn.classList.remove('btn--secondary');
+            voteBtn.classList.add('btn--primary');
+          }
+          if (labelSpan) labelSpan.textContent = 'Apoiar esta causa';
           window.showToast('Confirmação removida.', 'info');
         }
       } catch (err) {
