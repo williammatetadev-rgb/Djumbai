@@ -38,7 +38,7 @@ $rejeitados = (int) ($panorama['rejeitados'] ?? 0);
               Reportar um Problema
             </a>
           <?php else: ?>
-            <button type="button" onclick="openAuthPromptModal('reportar')" class="btn btn--primary btn--lg">
+            <button type="button" id="homeReportBtn" class="btn btn--primary btn--lg">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               Reportar um Problema
             </button>
@@ -173,8 +173,8 @@ $rejeitados = (int) ($panorama['rejeitados'] ?? 0);
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             Abrir Mapa Interativo Completo
           </a>
-          <span style="font-size: var(--font-xs); color: var(--text-muted);">
-            ⚡ <?= number_format($panorama['total'] ?? 0) ?> pontos assinalados
+          <span style="font-size: var(--font-xs); color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> <?= number_format($panorama['total'] ?? 0) ?> pontos assinalados
           </span>
         </div>
       </div>
@@ -189,8 +189,11 @@ $rejeitados = (int) ($panorama['rejeitados'] ?? 0);
 <!-- Include Leaflet CSS/JS for Home Teaser -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
+<script nonce="<?= e(CSP_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function () {
+  var homeReportBtn = document.getElementById('homeReportBtn');
+  if (homeReportBtn) homeReportBtn.addEventListener('click', function() { openAuthPromptModal('reportar'); });
+
   const homeMapContainer = document.getElementById('home-mini-map-container');
   if (!homeMapContainer) return;
 
@@ -228,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
           m.bindPopup(`
             <div style="font-family:sans-serif;padding:4px;">
               <strong style="font-size:12px;display:block;margin-bottom:2px;">${p.titulo}</strong>
-              <span style="font-size:11px;color:#666;">📍 ${p.bairro}</span><br>
+              <span style="font-size:11px;color:#666;display:inline-flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${p.bairro}</span><br>
               <a href="${p.url}" style="font-size:11px;color:#B4451F;font-weight:bold;margin-top:4px;display:inline-block;">Ver mais</a>
             </div>
           `);

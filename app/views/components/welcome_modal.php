@@ -36,7 +36,7 @@ $primeiro = explode(' ', trim($nome))[0];
       </p>
     </div>
 
-    <button type="button" class="dj-pop-toast__close" onclick="closeDjumbaiWelcomePop()" aria-label="Fechar">&times;</button>
+    <button type="button" id="welcomeCloseBtn" class="dj-pop-toast__close" aria-label="Fechar">&times;</button>
   </div>
 
   <!-- Barra de contagem regressiva de 10 segundos -->
@@ -46,11 +46,13 @@ $primeiro = explode(' ', trim($nome))[0];
 
 </div>
 
-<script>
+<script nonce="<?= e(CSP_NONCE) ?>">
 (function() {
   const pop = document.getElementById('djumbaiWelcomePop');
   if (pop) {
     pop.style.display = 'block';
+    var closeBtn = document.getElementById('welcomeCloseBtn');
+    if (closeBtn) closeBtn.addEventListener('click', closeDjumbaiWelcomePop);
     // Fechar automaticamente após 10 segundos
     setTimeout(function() {
       closeDjumbaiWelcomePop();

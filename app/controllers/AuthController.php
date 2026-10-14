@@ -335,6 +335,13 @@ class AuthController extends Controller
 
     public function logout(): void
     {
+        // Proteção CSRF: logout só pode ser feito via POST com token válido
+        if (!verifyCsrf()) {
+            SecurityLogger::log('CSRF_VIOLATION', 'Tentativa de logout sem token CSRF válido.');
+            flash('error', 'Pedido inválido ou sessão expirada.');
+            $this->redirect('/');
+        }
+
         $userId = $_SESSION['user_id'] ?? null;
         if ($userId) {
             SecurityLogger::log('USER_LOGOUT', "Utilizador encerrou sessão (ID: {$userId})");

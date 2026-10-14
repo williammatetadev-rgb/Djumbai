@@ -20,10 +20,10 @@
     </p>
 
     <div style="display:flex;gap:10px;">
-      <button type="button" onclick="closeDjumbaiLogoutModal()" style="flex:1;background:#f4f0ec;color:#4A3728;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
+      <button type="button" id="logoutCancelBtn" style="flex:1;background:#f4f0ec;color:#4A3728;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
         Não, ficar
       </button>
-      <button type="button" onclick="executarLogout()" style="flex:1;background:#B4451F;color:#fff;border:none;padding:10px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
+      <button type="button" id="logoutConfirmBtn" style="flex:1;background:#B4451F;color:#fff;border:none;padding:10px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
         Sim, sair
       </button>
     </div>
@@ -34,17 +34,27 @@
 <style>
 @keyframes lm_fade { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
 </style>
-<script>
+
+<!-- Formulário oculto de logout (POST com CSRF para prevenir CSRF logout) -->
+<form id="djumbaiLogoutForm" method="post" action="<?= url('logout') ?>" style="display:none;">
+  <?= csrfField() ?>
+</form>
+
+<script nonce="<?= e(CSP_NONCE) ?>">
 function executarLogout() {
-  window.location.href = '<?= url('logout') ?>';
+  document.getElementById('djumbaiLogoutForm').submit();
 }
 
 function closeDjumbaiLogoutModal() {
   document.getElementById('djumbaiLogoutModal').style.display = 'none';
 }
 
-// Interceptar links de logout que não estejam dentro do próprio modal
 document.addEventListener('DOMContentLoaded', function () {
+  var cancelBtn = document.getElementById('logoutCancelBtn');
+  if (cancelBtn) cancelBtn.addEventListener('click', closeDjumbaiLogoutModal);
+  var confirmBtn = document.getElementById('logoutConfirmBtn');
+  if (confirmBtn) confirmBtn.addEventListener('click', executarLogout);
+
   var logoutUrl = '<?= url('logout') ?>';
   document.querySelectorAll('a[href="' + logoutUrl + '"]').forEach(function (link) {
     link.addEventListener('click', function (e) {

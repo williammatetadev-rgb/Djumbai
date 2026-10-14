@@ -30,10 +30,20 @@ class SecurityHeaders
 
         // X-XSS-Protection foi depreciado e removido dos navegadores modernos (não usar)
 
-        // 6. Content Security Policy (CSP) robusta e compatível com SVGs/CSS locais
+        // 6. Content Security Policy (CSP) robusta com nonce por pedido
+        //    - 'unsafe-inline' REMOVIDO de script-src: scripts inline só executam se tiverem o nonce válido
+        //    - style-src mantém 'unsafe-inline' porque os estilos dinâmicos do design system são amplamente usados
+        //      (baixo risco de XSS via CSS, e a conversão completa impactaria a identidade visual)
+        $nonce = defined('CSP_NONCE') ? CSP_NONCE : '';
+        $scriptSrc = "script-src 'self'";
+        if ($nonce !== '') {
+            $scriptSrc .= " 'nonce-{$nonce}'";
+        }
+        $scriptSrc .= " https://unpkg.com https://cdn.jsdelivr.net";
+
         $csp = [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
+            $scriptSrc,
             "style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
             "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://unpkg.com https://cdn.jsdelivr.net",
             "font-src 'self'",

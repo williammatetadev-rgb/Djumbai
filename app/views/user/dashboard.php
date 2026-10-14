@@ -26,7 +26,9 @@ if ($temBi && $biStatus === 'nao_enviado') {
             <?= strtoupper(substr($perfil['nome'], 0, 1)) ?>
           </div>
           <?php if ($biStatus === 'verificado'): ?>
-            <div title="Identidade Civil Verificada" style="position:absolute;bottom:0px;right:0px;width:22px;height:22px;border-radius:50%;background:#4CAF50;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center;color:#FFF;font-size:12px;font-weight:900;">✓</div>
+            <div title="Identidade Civil Verificada" style="position:absolute;bottom:0px;right:0px;width:22px;height:22px;border-radius:50%;background:#4CAF50;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center;color:#FFF;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
           <?php else: ?>
             <div style="position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#4CAF50;border:2px solid #1A1410;"></div>
           <?php endif; ?>
@@ -41,12 +43,14 @@ if ($temBi && $biStatus === 'nao_enviado') {
                 Selo Verificado
               </span>
             <?php elseif ($biStatus === 'pendente'): ?>
-              <span style="background:rgba(217,154,30,0.2);border:1px solid rgba(217,154,30,0.6);color:var(--brand-dendem);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;">
-                BI em Análise ⏳
+              <span style="background:rgba(217,154,30,0.2);border:1px solid rgba(217,154,30,0.6);color:var(--brand-dendem);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:4px;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                BI em Análise
               </span>
             <?php elseif ($biStatus === 'rejeitado'): ?>
-              <span style="background:rgba(229,57,53,0.2);border:1px solid rgba(229,57,53,0.6);color:#EF5350;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;">
-                BI Rejeitado ✗
+              <span style="background:rgba(229,57,53,0.2);border:1px solid rgba(229,57,53,0.6);color:#EF5350;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:4px;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                BI Rejeitado
               </span>
             <?php endif; ?>
 

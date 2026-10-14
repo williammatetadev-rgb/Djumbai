@@ -437,7 +437,7 @@ class AdminController extends Controller
             $this->redirect('/admin/usuarios');
         }
 
-        $this->problemaModel->criarNotificacao($id, null, "⚠️ Notificação de Bons Modos: " . $mensagem);
+        $this->problemaModel->criarNotificacao($id, null, "Notificação de Bons Modos: " . $mensagem);
 
         SecurityLogger::log('ADMIN_USER_WARNING_SENT', "Notificação de bons modos enviada ao utilizador #{$id}", [
             'target_user_id' => $id,

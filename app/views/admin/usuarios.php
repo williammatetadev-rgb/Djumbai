@@ -154,7 +154,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
       </div>
 
       <?php if ($aba === 'equipa'): ?>
-        <button type="button" onclick="abrirNovoAdminModal()" class="btn btn--primary btn--sm" style="display: inline-flex; align-items: center; gap: 6px;">
+        <button type="button" class="js-btn-novo-admin btn btn--primary btn--sm" style="display: inline-flex; align-items: center; gap: 6px;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span>Novo Administrador</span>
         </button>
@@ -264,7 +264,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
           <div style="flex: 1.2; min-width: 160px;">
             <select name="bi" class="form-select" style="font-size: 12px; padding: 7px 10px;">
               <option value="">Documento: Todos</option>
-              <option value="verificado" <?= $filtros['bi'] === 'verificado' ? 'selected' : '' ?>>BI Verificado ✓</option>
+              <option value="verificado" <?= $filtros['bi'] === 'verificado' ? 'selected' : '' ?>>BI Verificado</option>
               <option value="pendente" <?= $filtros['bi'] === 'pendente' ? 'selected' : '' ?>>Aguardando Validação</option>
               <option value="rejeitado" <?= $filtros['bi'] === 'rejeitado' ? 'selected' : '' ?>>BI Rejeitado</option>
               <option value="nao_enviado" <?= $filtros['bi'] === 'nao_enviado' ? 'selected' : '' ?>>Sem Documento</option>
@@ -311,7 +311,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
           </p>
         </div>
       </div>
-      <button type="button" onclick="abrirNovoAdminModal()" class="btn btn--primary btn--sm" style="display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+      <button type="button" class="js-btn-novo-admin btn btn--primary btn--sm" style="display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <span>+ Novo Administrador</span>
       </button>
@@ -329,7 +329,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
         <?php if ($aba === 'equipa'): ?>
           <p style="font-weight: 700; font-size: 1rem; color: var(--text-primary); margin: 0 0 6px;">Nenhum administrador adicional registado</p>
           <p style="font-size: 13px; margin: 0 0 16px;">O sistema está a ser gerido exclusivamente pela conta raiz do Super Administrador.</p>
-          <button type="button" onclick="abrirNovoAdminModal()" class="btn btn--primary btn--sm" style="display: inline-flex; align-items: center; gap: 6px;">
+          <button type="button" class="js-btn-novo-admin btn btn--primary btn--sm" style="display: inline-flex; align-items: center; gap: 6px;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Adicionar Novo Administrador</span>
           </button>
@@ -357,7 +357,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
         $avatarBg = $isBanned ? '#B4451F' : (['#1F6F6B','#3F5A3C','#6B5A4A','#D99A1E'][crc32($u['email'] ?? $u['nome']) % 4]);
         $biStatus = $u['bi_status'] ?? 'nao_enviado';
       ?>
-        <div class="user-table-row" onclick="carregarDossie(<?= $u['id'] ?>)">
+        <div class="user-table-row js-user-row" data-id="<?= (int)$u['id'] ?>">
 
           <!-- Coluna 1: Membro / BI -->
           <div style="display: flex; align-items: center; gap: 12px;">
@@ -374,11 +374,17 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
 
                 <!-- Badge de Verificação de BI -->
                 <?php if ($biStatus === 'verificado'): ?>
-                  <span class="badge-bi--verificado" title="Identidade verificada oficialmente">Selo Verificado ✓</span>
+                  <span class="badge-bi--verificado" title="Identidade verificada oficialmente">
+                    Selo Verificado <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
                 <?php elseif ($biStatus === 'pendente'): ?>
-                  <span class="badge-bi--pendente" title="Aguardando validação dos documentos">BI Pendente ⚠️</span>
+                  <span class="badge-bi--pendente" title="Aguardando validação dos documentos">
+                    BI Pendente <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  </span>
                 <?php elseif ($biStatus === 'rejeitado'): ?>
-                  <span class="badge-bi--rejeitado" title="Documento recusado pela moderação">BI Recusado ✗</span>
+                  <span class="badge-bi--rejeitado" title="Documento recusado pela moderação">
+                    BI Recusado <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </span>
                 <?php else: ?>
                   <span class="badge-bi--nao-enviado">Sem BI</span>
                 <?php endif; ?>
@@ -435,7 +441,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
           </div>
 
           <!-- Coluna 6: Ações de Moderação -->
-          <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;" onclick="event.stopPropagation()">
+          <div class="js-row-actions" style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
 
             <!-- Se BI pendente, atalhos rápidos de decisão -->
             <?php if ($biStatus === 'pendente'): ?>
@@ -443,19 +449,19 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
                 <?= csrfField() ?>
                 <input type="hidden" name="aba" value="<?= e($aba) ?>" />
                 <input type="hidden" name="acao" value="aprovar" />
-                <button type="submit" class="btn btn--primary btn--sm" style="font-size: 10.5px; padding: 4px 8px; background: #2E7D32;" title="Aprovar BI imediatamente">
-                  Aprovar ✓
+                <button type="submit" class="btn btn--primary btn--sm" style="display:inline-flex;align-items:center;gap:3px;font-size: 10.5px; padding: 4px 8px; background: #2E7D32;" title="Aprovar BI imediatamente">
+                  Aprovar <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
               </form>
 
-              <button type="button" onclick="abrirRejeitarBiModal(<?= $u['id'] ?>, '<?= e(addslashes($u['nome'])) ?>')" class="btn btn--ghost btn--sm" style="font-size: 10.5px; padding: 4px 8px; color: var(--brand-terra);" title="Rejeitar BI com motivo">
-                Recusar ✗
+              <button type="button" class="js-btn-rejeitar-bi btn btn--ghost btn--sm" style="display:inline-flex;align-items:center;gap:3px;font-size: 10.5px; padding: 4px 8px; color: var(--brand-terra);" title="Rejeitar BI com motivo" data-id="<?= (int)$u['id'] ?>" data-nome="<?= e($u['nome']) ?>">
+                Recusar <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             <?php endif; ?>
 
             <?php if (($u['tipo'] ?? 'cidadao') === 'cidadao'): ?>
               <!-- Botão Aviso -->
-              <button type="button" onclick="openWarnModal(<?= $u['id'] ?>, '<?= e(addslashes($u['nome'])) ?>')" class="btn btn--ghost btn--sm" style="font-size: 11px; padding: 5px 8px;" title="Enviar aviso de boas maneiras">
+              <button type="button" class="js-btn-warn btn btn--ghost btn--sm" style="font-size: 11px; padding: 5px 8px;" title="Enviar aviso de boas maneiras" data-id="<?= (int)$u['id'] ?>" data-nome="<?= e($u['nome']) ?>">
                 Aviso
               </button>
 
@@ -469,7 +475,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
             <?php endif; ?>
 
             <!-- Botão Ver Ficha -->
-            <button type="button" onclick="carregarDossie(<?= $u['id'] ?>)" class="btn btn--ghost btn--sm" style="font-size: 11px; padding: 5px 8px;" title="Ver ficha cívica completa">
+            <button type="button" class="js-btn-ficha btn btn--ghost btn--sm" style="font-size: 11px; padding: 5px 8px;" title="Ver ficha cívica completa" data-id="<?= (int)$u['id'] ?>">
               Ficha ↗
             </button>
           </div>
@@ -498,7 +504,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
           <h2 id="dosNome" style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #FFF;">—</h2>
         </div>
       </div>
-      <button onclick="fecharDossieModal()" style="background: transparent; border: none; color: #FFF; font-size: 22px; cursor: pointer;">&times;</button>
+      <button class="js-close-dossie" style="background: transparent; border: none; color: #FFF; font-size: 22px; cursor: pointer;">&times;</button>
     </div>
 
     <!-- Conteúdo -->
@@ -562,13 +568,13 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
             <?= csrfField() ?>
             <input type="hidden" name="aba" value="<?= e($aba) ?>" />
             <input type="hidden" name="acao" value="aprovar" />
-            <button type="submit" class="btn btn--primary btn--sm" style="width: 100%; background: #2E7D32;">
-              Aprovar Documento (Emitir Selo) ✓
+            <button type="submit" class="btn btn--primary btn--sm" style="width: 100%; background: #2E7D32; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+              Aprovar Documento (Emitir Selo) <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
           </form>
 
-          <button type="button" id="btnRejeitarBiTrigger" class="btn btn--ghost btn--sm" style="flex: 1; color: var(--brand-terra);">
-            Recusar Documento com Motivo ✗
+          <button type="button" id="btnRejeitarBiTrigger" class="btn btn--ghost btn--sm" style="flex: 1; color: var(--brand-terra); display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+            Recusar Documento com Motivo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
       </div>
@@ -587,7 +593,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
 
     <!-- Rodapé -->
     <div style="padding: 16px 24px; background: var(--surface-sunken); border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end;">
-      <button type="button" onclick="fecharDossieModal()" class="btn btn--ghost btn--sm">
+      <button type="button" class="js-close-dossie btn btn--ghost btn--sm">
         Fechar Ficha
       </button>
     </div>
@@ -600,7 +606,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
   <div class="modal-box" style="max-width: 480px;">
     <div style="padding: 18px 24px; background: var(--surface-sunken); border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
       <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: var(--text-primary);">Motivo da Rejeição do BI</h3>
-      <button onclick="fecharRejeitarBiModal()" style="background: transparent; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+      <button class="js-close-rejeitar-bi" style="background: transparent; border: none; font-size: 20px; cursor: pointer;">&times;</button>
     </div>
 
     <form id="formRejeitarBi" method="POST" action="">
@@ -615,13 +621,13 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
 
         <!-- Presets -->
         <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
-          <button type="button" onclick="preencherMotivo('Imagem desfocada ou ilegível.')" style="font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;">
+          <button type="button" class="js-preset-motivo" data-motivo="Imagem desfocada ou ilegível." style="font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;">
             Desfocado / Ilegível
           </button>
-          <button type="button" onclick="preencherMotivo('Documento cortado ou incompleto.')" style="font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;">
+          <button type="button" class="js-preset-motivo" data-motivo="Documento cortado ou incompleto." style="font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;">
             Cortado / Incompleto
           </button>
-          <button type="button" onclick="preencherMotivo('Nome ou dados não correspondem ao perfil.')" style="font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;">
+          <button type="button" class="js-preset-motivo" data-motivo="Nome ou dados não correspondem ao perfil." style="font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;">
             Dados Divergentes
           </button>
         </div>
@@ -630,7 +636,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
       </div>
 
       <div style="padding: 14px 24px; background: var(--surface-sunken); border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" onclick="fecharRejeitarBiModal()" class="btn btn--ghost btn--sm">Cancelar</button>
+        <button type="button" class="js-close-rejeitar-bi btn btn--ghost btn--sm">Cancelar</button>
         <button type="submit" class="btn btn--primary btn--sm" style="background: var(--brand-terra);">
           Confirmar Rejeição
         </button>
@@ -644,7 +650,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
   <div class="modal-box" style="max-width: 500px;">
     <div style="padding: 18px 24px; background: linear-gradient(135deg, #1A1410, #2D221A); border-bottom: 3px solid var(--brand-baia); display: flex; justify-content: space-between; align-items: center; color: #FFF;">
       <h3 style="margin: 0; font-size: 14px; font-weight: 800;">Adicionar Administrador à Equipa</h3>
-      <button onclick="fecharNovoAdminModal()" style="background: transparent; border: none; font-size: 20px; color: #FFF; cursor: pointer;">&times;</button>
+      <button class="js-close-novo-admin" style="background: transparent; border: none; font-size: 20px; color: #FFF; cursor: pointer;">&times;</button>
     </div>
 
     <form method="POST" action="<?= url('admin/usuarios/novo-admin') ?>">
@@ -672,7 +678,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
       </div>
 
       <div style="padding: 16px 24px; background: var(--surface-sunken); border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" onclick="fecharNovoAdminModal()" class="btn btn--ghost btn--sm">Cancelar</button>
+        <button type="button" class="js-close-novo-admin btn btn--ghost btn--sm">Cancelar</button>
         <button type="submit" class="btn btn--primary btn--sm">Registar Administrador</button>
       </div>
     </form>
@@ -684,7 +690,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
   <div class="modal-box" style="max-width: 500px;">
     <div style="background: linear-gradient(135deg, #1A1410, #2D221A); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--brand-baia);">
       <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: #FFF;">Enviar Notificação de Bons Modos</h3>
-      <button onclick="closeWarnModal()" style="background: transparent; border: none; color: #FFF; font-size: 20px; cursor: pointer;">&times;</button>
+      <button class="js-close-warn" style="background: transparent; border: none; color: #FFF; font-size: 20px; cursor: pointer;">&times;</button>
     </div>
 
     <div style="padding: 20px 24px;">
@@ -694,9 +700,9 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
 
       <!-- Presets -->
       <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;">
-        <button type="button" onclick="useWarnPreset(1)" style="font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;">💬 Respeito Mútuo</button>
-        <button type="button" onclick="useWarnPreset(2)" style="font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;">📍 Precisão de Local</button>
-        <button type="button" onclick="useWarnPreset(3)" style="font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;">⚠️ Moderação Geral</button>
+        <button type="button" class="js-warn-preset" data-preset="1" style="display:inline-flex;align-items:center;gap:4px;font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Respeito Mútuo</button>
+        <button type="button" class="js-warn-preset" data-preset="2" style="display:inline-flex;align-items:center;gap:4px;font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Precisão de Local</button>
+        <button type="button" class="js-warn-preset" data-preset="3" style="display:inline-flex;align-items:center;gap:4px;font-size: 11px; padding: 4px 8px; border-radius: 12px; background: var(--surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Moderação Geral</button>
       </div>
 
       <form id="warnForm" action="" method="POST">
@@ -704,7 +710,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
         <textarea id="warnMsgInput" name="mensagem" class="form-input" rows="4" placeholder="Escreva a orientação de conduta..." style="width: 100%; margin-bottom: 16px;" required></textarea>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
-          <button type="button" onclick="closeWarnModal()" class="btn btn--ghost btn--sm">Cancelar</button>
+          <button type="button" class="js-close-warn btn btn--ghost btn--sm">Cancelar</button>
           <button type="submit" class="btn btn--primary btn--sm">Enviar Notificação</button>
         </div>
       </form>
@@ -713,7 +719,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
 </div>
 
 <!-- SCRIPTS DE INTERATIVIDADE -->
-<script>
+<script nonce="<?= e(CSP_NONCE) ?>">
 const warnPresets = {
   1: "Estimado(a) morador(a), pedimos a gentileza de manter o respeito e linguagem cordial ao interagir com outros membros da comunidade na plataforma Djumbai.",
   2: "Estimado(a) morador(a), solicitamos que verifique com atenção a localização exata e o ponto de referência ao submeter novas ocorrências no seu bairro.",
@@ -787,11 +793,11 @@ function preencherDossieModal(u) {
   // Selo Cívico Badge
   const seloBox = document.getElementById('dosSeloBadge');
   if (u.bi_status === 'verificado') {
-    seloBox.innerHTML = '<span class="badge-bi--verificado" style="font-size:12px;padding:6px 12px;">Selo Cívico Verificado ✓</span>';
+    seloBox.innerHTML = '<span class="badge-bi--verificado" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:6px 12px;">Selo Cívico Verificado <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>';
   } else if (u.bi_status === 'pendente') {
-    seloBox.innerHTML = '<span class="badge-bi--pendente" style="font-size:12px;padding:6px 12px;">Validação Pendente ⚠️</span>';
+    seloBox.innerHTML = '<span class="badge-bi--pendente" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:6px 12px;">Validação Pendente <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>';
   } else if (u.bi_status === 'rejeitado') {
-    seloBox.innerHTML = '<span class="badge-bi--rejeitado" style="font-size:12px;padding:6px 12px;">Documento Recusado ✗</span>';
+    seloBox.innerHTML = '<span class="badge-bi--rejeitado" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:6px 12px;">Documento Recusado <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>';
   } else {
     seloBox.innerHTML = '<span class="badge-bi--nao-enviado" style="font-size:12px;padding:6px 12px;">Sem BI Submetido</span>';
   }
@@ -871,6 +877,20 @@ function preencherDossieModal(u) {
 function fecharDossieModal() {
   document.getElementById('dossieModal').classList.remove('is-active');
 }
+
+// ── EVENT BINDINGS (CSP-compliant) ───────────────────────────────
+document.querySelectorAll('.js-btn-novo-admin').forEach(b => b.addEventListener('click', abrirNovoAdminModal));
+document.querySelectorAll('.js-user-row').forEach(r => r.addEventListener('click', function(){ carregarDossie(this.dataset.id); }));
+document.querySelectorAll('.js-row-actions').forEach(el => el.addEventListener('click', function(e){ e.stopPropagation(); }));
+document.querySelectorAll('.js-btn-rejeitar-bi').forEach(b => b.addEventListener('click', function(){ abrirRejeitarBiModal(this.dataset.id, this.dataset.nome); }));
+document.querySelectorAll('.js-btn-warn').forEach(b => b.addEventListener('click', function(){ openWarnModal(this.dataset.id, this.dataset.nome); }));
+document.querySelectorAll('.js-btn-ficha').forEach(b => b.addEventListener('click', function(){ carregarDossie(this.dataset.id); }));
+document.querySelectorAll('.js-close-dossie').forEach(b => b.addEventListener('click', fecharDossieModal));
+document.querySelectorAll('.js-close-rejeitar-bi').forEach(b => b.addEventListener('click', fecharRejeitarBiModal));
+document.querySelectorAll('.js-preset-motivo').forEach(b => b.addEventListener('click', function(){ preencherMotivo(this.dataset.motivo); }));
+document.querySelectorAll('.js-close-novo-admin').forEach(b => b.addEventListener('click', fecharNovoAdminModal));
+document.querySelectorAll('.js-close-warn').forEach(b => b.addEventListener('click', closeWarnModal));
+document.querySelectorAll('.js-warn-preset').forEach(b => b.addEventListener('click', function(){ useWarnPreset(this.dataset.preset); }));
 
 // Fechar com clique fora
 document.querySelectorAll('.modal-overlay').forEach(modal => {

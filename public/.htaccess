@@ -1,6 +1,9 @@
 # Apache — Djumbai URL Rewriting
 # Redireciona todos os pedidos para public/index.php (Front Controller)
 
+# Desativa método HTTP TRACE (previne XST - Cross-Site Tracing)
+TraceEnable Off
+
 Options -Indexes
 Options -MultiViews
 

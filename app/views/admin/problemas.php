@@ -4,6 +4,12 @@
  */
 ?>
 
+<style>
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+  .problem-row:hover { background: var(--surface-sunken); }
+  .js-dispatch-close:hover { background: rgba(255,255,255,0.15) !important; color: #FFF !important; }
+</style>
+
 <div style="padding: 24px;">
 
   <!-- ══ 1. CABEÇALHO & ATALHOS ════════════════════════════════════ -->
@@ -38,7 +44,7 @@
   <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;">
     
     <!-- Total Geral -->
-    <a href="<?= url('admin/problemas') ?>" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 14px 18px; transition: transform 0.15s, box-shadow 0.15s;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-sm)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+    <a href="<?= url('admin/problemas') ?>" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 14px 18px; transition: transform 0.15s, box-shadow 0.15s;" class="kpi-card">>
       <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(31,111,107,0.1); color: var(--brand-baia); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       </div>
@@ -49,7 +55,7 @@
     </a>
 
     <!-- Pendentes -->
-    <a href="<?= url('admin/problemas?estado=1') ?>" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: rgba(217,154,30,0.06); border: 1px solid rgba(217,154,30,0.3); border-radius: 12px; padding: 14px 18px; transition: transform 0.15s, box-shadow 0.15s;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-sm)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+    <a href="<?= url('admin/problemas?estado=1') ?>" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: rgba(217,154,30,0.06); border: 1px solid rgba(217,154,30,0.3); border-radius: 12px; padding: 14px 18px; transition: transform 0.15s, box-shadow 0.15s;" class="kpi-card">>
       <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(217,154,30,0.18); color: var(--brand-dendem); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       </div>
@@ -60,7 +66,7 @@
     </a>
 
     <!-- Em Análise -->
-    <a href="<?= url('admin/problemas?estado=2') ?>" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: rgba(31,111,107,0.06); border: 1px solid rgba(31,111,107,0.3); border-radius: 12px; padding: 14px 18px; transition: transform 0.15s, box-shadow 0.15s;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-sm)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+    <a href="<?= url('admin/problemas?estado=2') ?>" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: rgba(31,111,107,0.06); border: 1px solid rgba(31,111,107,0.3); border-radius: 12px; padding: 14px 18px; transition: transform 0.15s, box-shadow 0.15s;" class="kpi-card">>
       <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(31,111,107,0.18); color: var(--brand-baia); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </div>
@@ -71,7 +77,7 @@
     </a>
 
     <!-- Resolvidos -->
-    <a href="<?= url('admin/problemas?estado=3') ?>" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: rgba(76,175,80,0.06); border: 1px solid rgba(76,175,80,0.3); border-radius: 12px; padding: 14px 18px; transition: transform 0.15s, box-shadow 0.15s;" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-sm)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+    <a href="<?= url('admin/problemas?estado=3') ?>" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: rgba(76,175,80,0.06); border: 1px solid rgba(76,175,80,0.3); border-radius: 12px; padding: 14px 18px; transition: transform 0.15s, box-shadow 0.15s;" class="kpi-card">>
       <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(76,175,80,0.18); color: #2E7D32; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
@@ -102,7 +108,7 @@
       </div>
 
       <!-- Filtro Estado -->
-      <select name="estado" class="form-select" style="width: auto; font-size: 12.5px; padding: 8px 30px 8px 12px;" onchange="this.form.submit()">
+      <select name="estado" class="form-select js-filter-select" style="width: auto; font-size: 12.5px; padding: 8px 30px 8px 12px;">
         <option value="0">Todos os Estados</option>
         <?php foreach ($estados as $est): ?>
           <option value="<?= $est['id'] ?>" <?= $estadoId === (int)$est['id'] ? 'selected' : '' ?>>
@@ -112,7 +118,7 @@
       </select>
 
       <!-- Filtro Categoria -->
-      <select name="categoria" class="form-select" style="width: auto; font-size: 12.5px; padding: 8px 30px 8px 12px;" onchange="this.form.submit()">
+      <select name="categoria" class="form-select js-filter-select" style="width: auto; font-size: 12.5px; padding: 8px 30px 8px 12px;">
         <option value="0">Todas as Categorias</option>
         <?php foreach ($categorias as $cat): ?>
           <option value="<?= $cat['id'] ?>" <?= $categoriaId === (int)$cat['id'] ? 'selected' : '' ?>>
@@ -122,7 +128,7 @@
       </select>
 
       <!-- Filtro Município -->
-      <select name="municipio" class="form-select" style="width: auto; font-size: 12.5px; padding: 8px 30px 8px 12px;" onchange="this.form.submit()">
+      <select name="municipio" class="form-select js-filter-select" style="width: auto; font-size: 12.5px; padding: 8px 30px 8px 12px;">
         <option value="0">Todos os Municípios</option>
         <?php foreach ($municipios as $mun): ?>
           <option value="<?= $mun['id'] ?>" <?= $municipioId === (int)$mun['id'] ? 'selected' : '' ?>>
@@ -201,7 +207,7 @@
           'url'                => url('problemas/' . $p['id']),
         ]), ENT_QUOTES, 'UTF-8');
       ?>
-        <div class="problem-row" data-problem='<?= $problemJson ?>' onclick="handleProblemRowClick(event, this)" style="display: grid; grid-template-columns: 80px 2.8fr 1.6fr 1.3fr 1fr 1.6fr; gap: 0; padding: 14px 20px; border-bottom: 1px solid var(--border-subtle); align-items: center; cursor: pointer; transition: background 0.15s;" onmouseenter="this.style.background='var(--surface-sunken)'" onmouseleave="this.style.background='transparent'" title="Clique para ver os detalhes completos desta ocorrência">
+        <div class="problem-row" data-problem='<?= $problemJson ?>' style="display: grid; grid-template-columns: 80px 2.8fr 1.6fr 1.3fr 1fr 1.6fr; gap: 0; padding: 14px 20px; border-bottom: 1px solid var(--border-subtle); align-items: center; cursor: pointer; transition: background 0.15s;" title="Clique para ver os detalhes completos desta ocorrência">
 
           <!-- Foto Thumbnail -->
           <div>
@@ -219,7 +225,7 @@
                   </g>
                 </svg>
                 <!-- Foto real por cima; ao falhar esconde e o SVG fica visível -->
-                <img src="<?= $thumbUrl ?>" alt="Foto da ocorrência" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
+                <img src="<?= $thumbUrl ?>" alt="Foto da ocorrência" class="js-thumb-img" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;">
               </div>
             <?php else: ?>
               <!-- Sem fotografia: Thumbnail com logótipo Djumbai -->
@@ -292,7 +298,7 @@
           <!-- Apoios / Confirmações -->
           <div>
             <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: var(--text-primary);">
-              👍 <?= number_format($p['total_confirmacoes']) ?>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> <?= number_format($p['total_confirmacoes']) ?>
             </span>
             <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;">
               <?= (int)($p['total_comentarios'] ?? 0) ?> comentários
@@ -300,8 +306,8 @@
           </div>
 
           <!-- Ações Rápidas (Abrir Despacho, Ver, Eliminar) -->
-          <div style="display: flex; gap: 6px; justify-content: flex-end;" onclick="event.stopPropagation()">
-            <button type="button" onclick="openDispatchModal(<?= $problemJson ?>)" class="btn btn--primary btn--sm" style="font-size: 11px; padding: 6px 12px; background: var(--brand-baia); border: none; outline: none; box-shadow: none;">
+          <div class="js-row-actions" style="display: flex; gap: 6px; justify-content: flex-end;">
+            <button type="button" class="js-btn-dispatch btn btn--primary btn--sm" style="font-size: 11px; padding: 6px 12px; background: var(--brand-baia); border: none; outline: none; box-shadow: none;">
               Despachar
             </button>
 
@@ -309,7 +315,7 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             </a>
 
-            <form action="<?= url('admin/problemas/' . $p['id'] . '/eliminar') ?>" method="POST" style="margin: 0;" onsubmit="return confirm('Tem a certeza que deseja eliminar esta ocorrência definitivamente?');">
+            <form action="<?= url('admin/problemas/' . $p['id'] . '/eliminar') ?>" method="POST" style="margin: 0;" class="js-delete-problem-form">
               <?= csrfField() ?>
               <button type="submit" class="btn btn--ghost btn--sm" style="font-size: 11px; padding: 6px 8px; color: #C0392B;" title="Eliminar Ocorrência">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -364,7 +370,7 @@
           <h3 id="dmTitulo" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #FFF;"></h3>
         </div>
       </div>
-      <button onclick="closeDispatchModal()" style="background: rgba(255,255,255,0.08); border: none; color: rgba(255,255,255,0.7); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.15)';this.style.color='#FFF'" onmouseleave="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.7)'">&times;</button>
+      <button class="js-dispatch-close" style="background: rgba(255,255,255,0.08); border: none; color: rgba(255,255,255,0.7); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.15s;">&times;</button>
     </div>
 
     <!-- Conteúdo do Modal -->
@@ -374,8 +380,7 @@
       <div id="dmFotoWrapper" style="display: none; margin-bottom: 18px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-subtle); position: relative; background: var(--surface-sunken); height: 260px;">
         <!-- Foto real da ocorrência -->
         <img id="dmFotoImg" src="" alt="Fotografia da Ocorrência"
-             style="width: 100%; height: 100%; object-fit: cover; display: block;"
-             onerror="this.style.display='none'; document.getElementById('dmFotoFallback').style.display='flex';">
+             style="width: 100%; height: 100%; object-fit: cover; display: block;">
         <!-- Fallback caso o ficheiro não seja encontrado -->
         <div id="dmFotoFallback" style="display: none; position: absolute; inset: 0; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: var(--text-muted); background: var(--surface-sunken);">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -442,7 +447,7 @@
 
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">Atalhos de Despacho:</label>
-            <select onchange="if(this.value){document.getElementById('dmNotaInput').value=this.value;}" class="form-select" style="font-size: 12.5px;">
+            <select class="form-select js-dispatch-preset" style="font-size: 12.5px;">
               <option value="">Selecione um modelo...</option>
               <option value="Brigada municipal de saneamento destacada para o local.">Brigada destacada</option>
               <option value="Material em aprovisionamento junto do governo provincial.">Material em aprovisionamento</option>
@@ -458,7 +463,7 @@
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
-          <button type="button" onclick="closeDispatchModal()" class="btn btn--ghost btn--sm">Cancelar</button>
+          <button type="button" class="js-close-dispatch btn btn--ghost btn--sm">Cancelar</button>
           <button type="submit" class="btn btn--primary btn--sm" style="padding: 9px 20px; font-weight: 700;">
             Salvar Despacho
           </button>
@@ -470,8 +475,9 @@
   </div>
 </div>
 
-<script>
-function handleProblemRowClick(e, row) {
+<script nonce="<?= e(CSP_NONCE) ?>">
+function handleProblemRowClick(e) {
+  const row = this;
   if (e.target.closest('button') || e.target.closest('a') || e.target.closest('form')) {
     return;
   }
@@ -529,4 +535,26 @@ function closeDispatchModal() {
 document.getElementById('dispatchModal').addEventListener('click', function(e) {
   if (e.target === this) closeDispatchModal();
 });
+
+// ── EVENT BINDINGS (CSP-compliant) ───────────────────────────────
+document.querySelectorAll('.problem-row').forEach(r => r.addEventListener('click', handleProblemRowClick));
+document.querySelectorAll('.js-filter-select').forEach(s => s.addEventListener('change', function(){ this.form.submit(); }));
+document.querySelectorAll('.js-thumb-img').forEach(img => img.addEventListener('error', function(){ this.style.display = 'none'; }));
+document.querySelectorAll('.js-row-actions').forEach(el => el.addEventListener('click', function(e){ e.stopPropagation(); }));
+document.querySelectorAll('.js-btn-dispatch').forEach(b => b.addEventListener('click', function(){
+  const raw = this.closest('.problem-row').getAttribute('data-problem');
+  if (raw) { try { openDispatchModal(JSON.parse(raw)); } catch(err){ console.error(err); } }
+}));
+document.querySelectorAll('.js-delete-problem-form').forEach(f => f.addEventListener('submit', function(e){
+  if (!confirm('Tem a certeza que deseja eliminar esta ocorrência definitivamente?')) e.preventDefault();
+}));
+document.querySelectorAll('.js-dispatch-close').forEach(b => b.addEventListener('click', closeDispatchModal));
+document.querySelectorAll('.js-close-dispatch').forEach(b => b.addEventListener('click', closeDispatchModal));
+document.getElementById('dmFotoImg').addEventListener('error', function(){
+  this.style.display = 'none';
+  document.getElementById('dmFotoFallback').style.display = 'flex';
+});
+document.querySelectorAll('.js-dispatch-preset').forEach(s => s.addEventListener('change', function(){
+  if (this.value) document.getElementById('dmNotaInput').value = this.value;
+}));
 </script>

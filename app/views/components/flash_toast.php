@@ -54,7 +54,7 @@ if (empty($flashes)) {
           <h5 class="dj-pop-toast__title"><?= e($f['title']) ?></h5>
           <p class="dj-pop-toast__msg"><?= e($f['msg']) ?></p>
         </div>
-        <button type="button" class="dj-pop-toast__close" onclick="closeDjPopToast('djPopToast_<?= $idx ?>')" aria-label="Fechar">&times;</button>
+        <button type="button" class="dj-pop-toast__close dj-toast-close-btn" aria-label="Fechar">&times;</button>
       </div>
       <!-- Barra de progresso de 10 segundos -->
       <div class="dj-pop-toast__progress">
@@ -64,7 +64,7 @@ if (empty($flashes)) {
   <?php endforeach; ?>
 </div>
 
-<script>
+<script nonce="<?= e(CSP_NONCE) ?>">
 function closeDjPopToast(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -77,6 +77,13 @@ function closeDjPopToast(id) {
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.dj-pop-toast').forEach(function(toast) {
     if (toast.id.startsWith('djPopToast_')) {
+      // Fechar ao clicar no botão
+      var closeBtn = toast.querySelector('.dj-toast-close-btn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+          closeDjPopToast(toast.id);
+        });
+      }
       // Desaparece automaticamente após 10 segundos
       setTimeout(function() {
         closeDjPopToast(toast.id);

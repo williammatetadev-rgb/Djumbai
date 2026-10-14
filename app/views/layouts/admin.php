@@ -108,9 +108,12 @@
         <strong style="display: block; font-size: var(--font-xs); color: #FFF;"><?= e($_SESSION['user_nome'] ?? 'Administrador') ?></strong>
         <span style="font-size: 10px; color: var(--brand-dendem);">Gestor Municipal</span>
       </div>
-      <a href="<?= url('logout') ?>" class="btn btn--ghost-dark btn--sm" title="Terminar Sessão" style="padding: 6px 10px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </a>
+      <form action="<?= url('logout') ?>" method="POST" style="margin: 0;">
+        <?= csrfField() ?>
+        <button type="submit" class="btn btn--ghost-dark btn--sm" title="Terminar Sessão" style="padding: 6px 10px; cursor: pointer; background: transparent; border: none;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </form>
     </div>
   </div>
 </aside>
@@ -174,7 +177,7 @@
 <?php require APP_PATH . '/views/components/logout_modal.php'; ?>
 
 <script src="<?= url('js/script.js') ?>"></script>
-<script>
+<script nonce="<?= e(CSP_NONCE) ?>">
   // Controle de abertura da sidebar no mobile
   const adminSidebar = document.getElementById('adminSidebar');
   const adminToggle = document.getElementById('adminSidebarToggle');

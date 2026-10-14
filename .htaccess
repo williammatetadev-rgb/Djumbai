@@ -1,5 +1,8 @@
 # Djumbai — Proteção e Blindagem Raiz do Servidor Apache
 
+# 0. Desativa método HTTP TRACE (previne XST - Cross-Site Tracing)
+TraceEnable Off
+
 # 1. Desativa listagem de diretórios
 Options -Indexes -MultiViews
 

@@ -2,6 +2,10 @@
      ║  VIEW: problemas/show.php (Redesenho com Respostas)      ║
      ╚══════════════════════════════════════════════════════════╝ -->
 
+<style>
+.js-comment-submit-btn:hover { background: #9E3A1A !important; }
+</style>
+
 <div class="container" style="padding-block: var(--space-8);">
 
   <!-- Breadcrumb elegante -->
@@ -130,7 +134,7 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span style="font-size: 11px; color: var(--text-muted);">Mantenha o respeito e a precisão nas informações.</span>
-                  <button type="submit" style="display: inline-flex; align-items: center; gap: 6px; background: var(--brand-terra); color: #FFF; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s;" onmouseenter="this.style.background='#9E3A1A'" onmouseleave="this.style.background='var(--brand-terra)'">
+                  <button type="submit" class="js-comment-submit-btn" style="display: inline-flex; align-items: center; gap: 6px; background: var(--brand-terra); color: #FFF; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     Publicar Comentário
                   </button>
@@ -142,7 +146,7 @@
               <p style="font-size: 13.5px; color: var(--text-muted); margin: 0 0 12px;">
                 Precisa de ter conta para participar na discussão comunitária.
               </p>
-              <button type="button" onclick="openAuthPromptModal('comentar')" class="btn btn--primary btn--sm" style="display: inline-flex; align-items: center; gap: 6px;">
+              <button type="button" class="js-auth-commentar btn btn--primary btn--sm" style="display: inline-flex; align-items: center; gap: 6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Comentar ou Responder
               </button>
@@ -185,7 +189,7 @@
                   <!-- Botão para Responder -->
                   <?php if (isLoggedIn()): ?>
                     <div style="margin-left: 42px; margin-bottom: 8px;">
-                      <button type="button" onclick="toggleReplyForm(<?= $c['id'] ?>)" style="background: none; border: none; padding: 0; color: var(--brand-terra); font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                      <button type="button" class="js-toggle-reply" data-comment-id="<?= $c['id'] ?>" style="background: none; border: none; padding: 0; color: var(--brand-terra); font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
                         Responder
                       </button>
@@ -198,14 +202,14 @@
                         <input type="hidden" name="parent_id" value="<?= $c['id'] ?>">
                         <textarea name="texto" rows="2" class="form-textarea" placeholder="Escreva a sua resposta para <?= e(addslashes($c['autor_nome'])) ?>..." required style="width: 100%; font-size: 13px; margin-bottom: 10px; resize: vertical; box-sizing: border-box;"></textarea>
                         <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                          <button type="button" onclick="toggleReplyForm(<?= $c['id'] ?>)" class="btn btn--ghost btn--sm" style="padding: 4px 10px; font-size: 11px;">Cancelar</button>
+                          <button type="button" class="js-toggle-reply btn btn--ghost btn--sm" data-comment-id="<?= $c['id'] ?>" style="padding: 4px 10px; font-size: 11px;">Cancelar</button>
                           <button type="submit" class="btn btn--primary btn--sm" style="padding: 4px 12px; font-size: 11px;">Enviar Resposta</button>
                         </div>
                       </form>
                     </div>
                   <?php else: ?>
                     <div style="margin-left: 42px; margin-bottom: 8px;">
-                      <button type="button" onclick="openAuthPromptModal('comentar')" style="background: none; border: none; padding: 0; color: var(--brand-terra); font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                      <button type="button" class="js-auth-commentar" style="background: none; border: none; padding: 0; color: var(--brand-terra); font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
                         Responder
                       </button>
@@ -266,7 +270,7 @@
               O seu apoio ajuda a priorizar a intervenção das autoridades municipais.
             </p>
           <?php else: ?>
-            <button type="button" onclick="openAuthPromptModal('confirmar')" class="btn btn--primary btn--full btn--lg" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border-radius: 10px; font-weight: 700;">
+            <button type="button" class="js-auth-confirmar btn btn--primary btn--full btn--lg" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border-radius: 10px; font-weight: 700;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
               Apoiar esta causa
             </button>
@@ -283,7 +287,7 @@
                 Reportar Outro Problema
               </a>
             <?php else: ?>
-              <button type="button" onclick="openAuthPromptModal('reportar')" class="btn btn--ghost btn--full btn--sm" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <button type="button" class="js-auth-reportar btn btn--ghost btn--full btn--sm" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Reportar Outro Problema
               </button>
@@ -302,7 +306,7 @@
 
 </div>
 
-<script>
+<script nonce="<?= e(CSP_NONCE) ?>">
 function toggleReplyForm(commentId) {
   const form = document.getElementById('reply-form-' + commentId);
   if (!form) return;
@@ -314,4 +318,20 @@ function toggleReplyForm(commentId) {
     form.style.display = 'none';
   }
 }
+
+document.querySelectorAll('.js-toggle-reply').forEach(b => b.addEventListener('click', function(){
+  toggleReplyForm(this.dataset.commentId);
+}));
+
+document.querySelectorAll('.js-auth-commentar').forEach(b => b.addEventListener('click', function(){
+  openAuthPromptModal('comentar');
+}));
+
+document.querySelectorAll('.js-auth-confirmar').forEach(b => b.addEventListener('click', function(){
+  openAuthPromptModal('confirmar');
+}));
+
+document.querySelectorAll('.js-auth-reportar').forEach(b => b.addEventListener('click', function(){
+  openAuthPromptModal('reportar');
+}));
 </script>

@@ -7,7 +7,7 @@
   <meta name="csrf-token" content="<?= e(csrfToken()) ?>" />
   <title><?= e(($titulo ?? siteSetting('nome_site', 'Djumbai')) . ' – ' . siteSetting('nome_site', 'Djumbai')) ?></title>
 
-  <script>window.IS_LOGGED_IN = <?= isLoggedIn() ? 'true' : 'false' ?>;</script>
+  <script nonce="<?= e(CSP_NONCE) ?>">window.IS_LOGGED_IN = <?= isLoggedIn() ? 'true' : 'false' ?>;</script>
   <!-- Estilos Djumbai (offline, sem CDN) -->
   <link rel="stylesheet" href="<?= url('css/style.css') ?>" />
 </head>
@@ -44,7 +44,10 @@
           <a href="<?= url('mapa') ?>" class="btn btn--ghost btn--sm">Mapa Visual</a>
           <a href="<?= url('problemas') ?>" class="btn btn--ghost btn--sm">Explorar Reportes</a>
         <?php endif; ?>
-        <a href="<?= url('logout') ?>" class="btn btn--ghost btn--sm">Sair</a>
+        <form action="<?= url('logout') ?>" method="POST" style="display: inline; margin: 0;">
+          <?= csrfField() ?>
+          <button type="submit" class="btn btn--ghost btn--sm" style="cursor: pointer;">Sair</button>
+        </form>
       <?php else: ?>
         <a href="<?= url('login') ?>"    class="btn btn--ghost btn--sm">Entrar</a>
         <a href="<?= url('cadastro') ?>" class="btn btn--primary btn--sm">Criar Conta</a>
@@ -65,7 +68,10 @@
     <a href="<?= url('problemas') ?>" class="navbar__link">Explorar Reportes</a>
     <div style="padding-top: var(--space-4); display: flex; flex-direction: column; gap: 8px;">
       <a href="<?= url('reportar') ?>" class="btn btn--primary btn--full">Reportar Problema</a>
-      <a href="<?= url('logout') ?>"   class="btn btn--ghost btn--full">Terminar Sessão</a>
+      <form action="<?= url('logout') ?>" method="POST" style="margin: 0; width: 100%;">
+        <?= csrfField() ?>
+        <button type="submit" class="btn btn--ghost btn--full" style="cursor: pointer; width: 100%;">Terminar Sessão</button>
+      </form>
     </div>
   <?php else: ?>
     <a href="<?= url() ?>"            class="navbar__link">Início</a>
@@ -75,7 +81,10 @@
     <div style="padding-top: var(--space-4); display: flex; flex-direction: column; gap: 8px;">
       <?php if (isLoggedIn() && isAdmin()): ?>
         <a href="<?= url('admin') ?>"  class="btn btn--secondary btn--full">Painel Admin</a>
-        <a href="<?= url('logout') ?>" class="btn btn--ghost btn--full">Terminar Sessão</a>
+        <form action="<?= url('logout') ?>" method="POST" style="margin: 0; width: 100%;">
+          <?= csrfField() ?>
+          <button type="submit" class="btn btn--ghost btn--full" style="cursor: pointer; width: 100%;">Terminar Sessão</button>
+        </form>
       <?php else: ?>
         <a href="<?= url('login') ?>"    class="btn btn--ghost btn--full">Entrar</a>
         <a href="<?= url('cadastro') ?>" class="btn btn--primary btn--full">Criar Conta Grátis</a>
@@ -155,6 +164,6 @@
 <?php require APP_PATH . '/views/components/auth_prompt_modal.php'; ?>
 
 <!-- Scripts -->
-<script src="<?= url('js/script.js') ?>"></script>
+<script nonce="<?= e(CSP_NONCE) ?>" src="<?= url('js/script.js') ?>"></script>
 </body>
 </html>

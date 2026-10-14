@@ -45,15 +45,45 @@ class SecurityLogger
     }
 
     /**
-     * Obtém o IP do cliente de forma segura
+     * Obtém o IP do cliente de forma segura.
+     *
+     * Se REMOTE_ADDR pertencer à lista TRUSTED_PROXIES (definida no .env),
+     * lê o cabeçalho X-Forwarded-For e devolve o IP mais à esquerda (o real cliente).
+     * Caso contrário, usa sempre REMOTE_ADDR (seguro contra spoofing).
      */
     public static function getClientIp(): string
     {
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
-        // Valida se o IP é válido (IPv4 ou IPv6)
-        if (filter_var($ip, FILTER_VALIDATE_IP)) {
-            return $ip;
+        // Constrói lista de proxies confiáveis a partir da variável de ambiente
+        // Ex.: TRUSTED_PROXIES=10.0.0.1,10.0.0.2
+        $trustedProxies = [];
+        $envProxies = $_ENV['TRUSTED_PROXIES'] ?? getenv('TRUSTED_PROXIES') ?? '';
+        if ($envProxies !== '' && $envProxies !== false) {
+            foreach (explode(',', $envProxies) as $proxy) {
+                $proxy = trim($proxy);
+                if (filter_var($proxy, FILTER_VALIDATE_IP)) {
+                    $trustedProxies[] = $proxy;
+                }
+            }
+        }
+
+        // Só lê X-Forwarded-For se o pedido vier de um proxy de confiança
+        if (!empty($trustedProxies) && in_array($remoteAddr, $trustedProxies, true)) {
+            $xff = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+            if ($xff !== '') {
+                // X-Forwarded-For: client, proxy1, proxy2 — o cliente real é o primeiro
+                $parts = explode(',', $xff);
+                $clientIp = trim($parts[0]);
+                if (filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $clientIp;
+                }
+            }
+        }
+
+        // Fallback seguro: usa sempre REMOTE_ADDR
+        if (filter_var($remoteAddr, FILTER_VALIDATE_IP)) {
+            return $remoteAddr;
         }
 
         return '0.0.0.0';

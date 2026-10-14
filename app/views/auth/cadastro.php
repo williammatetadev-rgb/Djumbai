@@ -219,8 +219,8 @@
               </span>
             </label>
             <input type="file" id="biFrenteInput" name="bi_frente" accept="image/*,application/pdf" capture="environment" style="display: none;">
-            <div id="biFrentePreview" style="display: none; margin-top: 10px; font-size: 12px; color: var(--brand-terra); font-weight: 700;">
-              ✓ Frente selecionada com sucesso
+            <div id="biFrentePreview" style="display: none; margin-top: 10px; font-size: 12px; color: var(--brand-terra); font-weight: 700; align-items: center; justify-content: center; gap: 4px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Frente selecionada com sucesso
             </div>
             <span class="form-error-msg" id="biFrenteError" aria-live="polite">
               <?= e($errors['bi_frente'] ?? '') ?>
@@ -241,8 +241,8 @@
               </span>
             </label>
             <input type="file" id="biVersoInput" name="bi_verso" accept="image/*,application/pdf" capture="environment" style="display: none;">
-            <div id="biVersoPreview" style="display: none; margin-top: 10px; font-size: 12px; color: var(--brand-terra); font-weight: 700;">
-              ✓ Verso selecionado com sucesso
+            <div id="biVersoPreview" style="display: none; margin-top: 10px; font-size: 12px; color: var(--brand-terra); font-weight: 700; align-items: center; justify-content: center; gap: 4px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Verso selecionado com sucesso
             </div>
             <span class="form-error-msg" id="biVersoError" aria-live="polite">
               <?= e($errors['bi_verso'] ?? '') ?>
@@ -308,7 +308,9 @@
           <!-- Alerta de Restrição Territorial Dinâmica -->
           <div id="territoryRestrictionNotice" style="display: none; background: #FFF4E5; border: 1px solid #F5C6CB; border-left: 4px solid var(--brand-terra); padding: 10px 14px; border-radius: var(--radius-sm); margin-top: 4px; font-size: var(--font-xs); color: #721C24;">
             <div style="display: flex; gap: 8px; align-items: flex-start;">
-              <span style="color: var(--brand-terra); font-weight: bold; font-size: 14px;">⚠️</span>
+              <span style="color: var(--brand-terra); font-weight: bold; font-size: 14px; display: inline-flex; align-items: center; margin-top: 2px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </span>
               <div>
                 <strong style="display: block; font-weight: 700; margin-bottom: 2px;">Localização não disponível</strong>
                 <span id="territoryRestrictionMsg">Esta opção de localização não está disponível de momento. O sistema está disponível apenas para a Administração de Cacuaco.</span>

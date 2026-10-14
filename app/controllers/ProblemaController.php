@@ -407,6 +407,14 @@ class ProblemaController extends Controller
             $this->redirect('/problemas/' . $id);
         }
 
+        // Rate limiting: máx 10 comentários por utilizador em 60 segundos
+        $rlKey = 'comentar_' . (int) $_SESSION['user_id'];
+        if (RateLimiter::tooManyAttempts($rlKey, 10, 60)) {
+            flash('error', 'Muitos comentários num curto espaço de tempo. Aguarde um momento.');
+            $this->redirect('/problemas/' . $id);
+        }
+        RateLimiter::hit($rlKey, 60);
+
         $texto    = sanitizeString($_POST['texto'] ?? '');
         $parentId = (int) ($_POST['parent_id'] ?? 0);
 

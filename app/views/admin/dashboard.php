@@ -198,7 +198,7 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
         <span>Registar Ocorrência</span>
       </a>
 
-      <button onclick="window.print()" class="btn btn--ghost btn--sm" title="Gerar relatório impresso ou salvar PDF">
+      <button type="button" id="btnPrint" class="btn btn--ghost btn--sm" title="Gerar relatório impresso ou salvar PDF">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         <span>Imprimir Boletim</span>
       </button>
@@ -237,9 +237,9 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
       </div>
     </div>
     <div class="stat-card__value" style="color: #8C6211;" data-target="<?= $pendentes ?>"><?= number_format($pendentes) ?></div>
-    <span style="font-size: var(--font-xs); color: #8C6211; font-weight: 600;">
+    <span style="font-size: var(--font-xs); color: #8C6211; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
       <?php if ($atrasadosSLA > 0): ?>
-        ⚠️ <?= $atrasadosSLA ?> com SLA &gt; 3 dias
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> <?= $atrasadosSLA ?> com SLA &gt; 3 dias
       <?php else: ?>
         Fila em dia
       <?php endif; ?>
@@ -337,7 +337,7 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
                 <?= e($crit['titulo']) ?>
               </a>
               <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span>📍 <strong><?= e($crit['bairro_nome']) ?></strong> (<?= e($crit['municipio_nome']) ?>)</span>
+                <span style="display:inline-flex;align-items:center;gap:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> <strong><?= e($crit['bairro_nome']) ?></strong> (<?= e($crit['municipio_nome']) ?>)</span>
                 <span>•</span>
                 <span>Área: <?= e($crit['categoria_nome']) ?></span>
                 <span>•</span>
@@ -349,8 +349,10 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
           <div style="display: flex; align-items: center; gap: 8px;">
             <button 
               type="button" 
-              class="btn btn--primary btn--sm" 
-              onclick="abrirDespachoRapido(<?= $crit['id'] ?>, '<?= e(addslashes($crit['titulo'])) ?>', <?= (int)$crit['estado_id'] ?>)"
+              class="btn btn--primary btn--sm js-quick-dispatch" 
+              data-id="<?= (int)$crit['id'] ?>"
+              data-titulo="<?= e($crit['titulo']) ?>"
+              data-estado-id="<?= (int)$crit['estado_id'] ?>"
               style="padding: 6px 12px; font-size: 11px;"
             >
               <span>Despacho Rápido</span>
@@ -552,9 +554,11 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
             <td style="padding: 14px 10px; text-align: right;">
               <button 
                 type="button" 
-                class="btn btn--primary btn--sm" 
+                class="btn btn--primary btn--sm js-quick-dispatch" 
+                data-id="<?= (int)$r['id'] ?>"
+                data-titulo="<?= e($r['titulo']) ?>"
+                data-estado-id="<?= (int)$r['estado_id'] ?>"
                 style="font-size: 11px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px;"
-                onclick="abrirDespachoRapido(<?= $r['id'] ?>, '<?= e(addslashes($r['titulo'])) ?>', <?= (int)$r['estado_id'] ?>)"
               >
                 <span>Despachar</span>
                 <?= icon('settings', 12) ?>
@@ -581,7 +585,7 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
           <span style="font-size: 11px; color: var(--text-muted);" id="dispatchModalSubtitle">Atualizar estado e nota municipal</span>
         </div>
       </div>
-      <button type="button" onclick="fecharDespachoRapido()" style="background: transparent; border: none; font-size: 20px; line-height: 1; cursor: pointer; color: var(--text-muted);">&times;</button>
+      <button type="button" class="js-close-quick-dispatch" style="background: transparent; border: none; font-size: 20px; line-height: 1; cursor: pointer; color: var(--text-muted);">&times;</button>
     </div>
 
     <form id="formQuickDispatch" method="POST" action="">
@@ -620,7 +624,7 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
       </div>
 
       <div style="padding: 16px 24px; background: var(--surface-sunken); border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" onclick="fecharDespachoRapido()" class="btn btn--ghost btn--sm">
+        <button type="button" class="btn btn--ghost btn--sm js-close-quick-dispatch">
           Cancelar
         </button>
         <button type="submit" class="btn btn--primary btn--sm">
@@ -632,8 +636,8 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
 </div>
 
 <!-- Leaflet JS & Scripts de Inicialização -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" nonce="<?= e(CSP_NONCE) ?>"></script>
+<script nonce="<?= e(CSP_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function () {
   // ── 1. MODAL DE DESPACHO RÁPIDO ────────────────────────────────
   const modal = document.getElementById('quickDispatchModal');
@@ -716,10 +720,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const popupContent = `
         <div style="font-family: inherit; font-size: 12px; max-width: 230px; line-height: 1.4;">
           <strong style="display: block; font-size: 13px; color: #111; margin-bottom: 4px;">${p.titulo}</strong>
-          <span style="display: block; color: #666; margin-bottom: 6px;">📍 ${p.bairro_nome || '—'}, ${p.municipio_nome || ''}</span>
+          <span style="display: flex; align-items: center; gap: 4px; color: #666; margin-bottom: 6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${p.bairro_nome || '—'}, ${p.municipio_nome || ''}</span>
           <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #EEE; padding-top: 6px;">
             <span style="font-weight: 700; color: ${cor};">${p.estado_nome}</span>
-            <span style="color: #777;">⭐ ${p.total_confirmacoes} apoios</span>
+            <span style="color: #777; display: flex; align-items: center; gap: 4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> ${p.total_confirmacoes} apoios</span>
           </div>
           <div style="margin-top: 8px;">
             <a href="<?= url('problemas/') ?>${p.id}" target="_blank" style="display: inline-block; padding: 4px 8px; background: #B4451F; color: #FFF; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: 700;">Ver Ocorrência</a>
@@ -735,5 +739,13 @@ document.addEventListener('DOMContentLoaded', function () {
       map.fitBounds(markers, { padding: [30, 30], maxZoom: 14 });
     }
   }
+
+  // ── EVENT BINDINGS (CSP-compliant) ──────────────────────────────
+  const btnPrint = document.getElementById('btnPrint');
+  if (btnPrint) btnPrint.addEventListener('click', function(){ window.print(); });
+  document.querySelectorAll('.js-quick-dispatch').forEach(b => b.addEventListener('click', function(){
+    abrirDespachoRapido(this.dataset.id, this.dataset.titulo, parseInt(this.dataset.estadoId, 10));
+  }));
+  document.querySelectorAll('.js-close-quick-dispatch').forEach(b => b.addEventListener('click', fecharDespachoRapido));
 });
 </script>

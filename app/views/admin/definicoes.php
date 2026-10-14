@@ -86,7 +86,7 @@ $atualizadoPor = $settings['atualizado_por'] ?? null;
             <!-- Toggle: Aprovação Automática -->
             <label for="toggleAprov" style="display:flex;align-items:flex-start;gap:14px;padding:18px;background:var(--surface-sunken);border-radius:12px;border:1px solid <?= $aprovAuto ? 'rgba(63,90,60,0.3)' : 'var(--border-subtle)' ?>;cursor:pointer;transition:border-color 0.2s;">
               <div style="position:relative;flex-shrink:0;margin-top:2px;">
-                <input type="checkbox" id="toggleAprov" name="aprovacao_automatica" value="1" <?= $aprovAuto ? 'checked' : '' ?> style="position:absolute;opacity:0;width:0;height:0;" onchange="updateToggle('toggleAprov','trackAprov')">
+                <input type="checkbox" id="toggleAprov" name="aprovacao_automatica" value="1" <?= $aprovAuto ? 'checked' : '' ?> style="position:absolute;opacity:0;width:0;height:0;">
                 <div id="trackAprov" style="width:44px;height:24px;border-radius:12px;background:<?= $aprovAuto ? 'var(--brand-capim)' : 'var(--border-subtle)' ?>;transition:background 0.2s;position:relative;">
                   <div style="position:absolute;top:3px;left:<?= $aprovAuto ? '23px' : '3px' ?>;width:18px;height:18px;border-radius:50%;background:#FFF;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left 0.2s;" id="thumbAprov"></div>
                 </div>
@@ -100,7 +100,7 @@ $atualizadoPor = $settings['atualizado_por'] ?? null;
             <!-- Toggle: Modo Manutenção -->
             <label for="toggleManu" style="display:flex;align-items:flex-start;gap:14px;padding:18px;background:<?= $modoManu ? 'rgba(180,69,31,0.05)' : 'var(--surface-sunken)' ?>;border-radius:12px;border:1px solid <?= $modoManu ? 'rgba(180,69,31,0.3)' : 'var(--border-subtle)' ?>;cursor:pointer;transition:border-color 0.2s;">
               <div style="position:relative;flex-shrink:0;margin-top:2px;">
-                <input type="checkbox" id="toggleManu" name="modo_manutencao" value="1" <?= $modoManu ? 'checked' : '' ?> style="position:absolute;opacity:0;width:0;height:0;" onchange="updateToggle('toggleManu','trackManu')">
+                <input type="checkbox" id="toggleManu" name="modo_manutencao" value="1" <?= $modoManu ? 'checked' : '' ?> style="position:absolute;opacity:0;width:0;height:0;">
                 <div id="trackManu" style="width:44px;height:24px;border-radius:12px;background:<?= $modoManu ? 'var(--brand-terra)' : 'var(--border-subtle)' ?>;transition:background 0.2s;position:relative;">
                   <div style="position:absolute;top:3px;left:<?= $modoManu ? '23px' : '3px' ?>;width:18px;height:18px;border-radius:50%;background:#FFF;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left 0.2s;" id="thumbManu"></div>
                 </div>
@@ -143,7 +143,7 @@ $atualizadoPor = $settings['atualizado_por'] ?? null;
       <!-- ─── BOTÃO GUARDAR ─────────────────────────────────────── -->
       <div style="display:flex;justify-content:flex-end;gap:12px;align-items:center;padding-top:4px;">
         <span style="font-size:12px;color:var(--text-muted);">As alterações são guardadas imediatamente e registadas em auditoria.</span>
-        <button type="submit" style="display:flex;align-items:center;gap:8px;background:var(--brand-terra);color:#FFF;padding:12px 28px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(180,69,31,0.3);transition:all 0.2s;" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 16px rgba(180,69,31,0.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(180,69,31,0.3)'">
+        <button type="submit" class="def-save-btn" style="display:flex;align-items:center;gap:8px;background:var(--brand-terra);color:#FFF;padding:12px 28px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(180,69,31,0.3);transition:all 0.2s;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           Guardar Definições
         </button>
@@ -153,7 +153,10 @@ $atualizadoPor = $settings['atualizado_por'] ?? null;
   </form>
 </div>
 
-<script>
+<style>
+.def-save-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(180,69,31,0.4); }
+</style>
+<script nonce="<?= e(CSP_NONCE) ?>">
 function updateToggle(inputId, trackId) {
   const input = document.getElementById(inputId);
   const track = document.getElementById(trackId);
@@ -166,4 +169,11 @@ function updateToggle(inputId, trackId) {
     thumb.style.left = '3px';
   }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  var ta = document.getElementById('toggleAprov');
+  if (ta) ta.addEventListener('change', function() { updateToggle('toggleAprov', 'trackAprov'); });
+  var tm = document.getElementById('toggleManu');
+  if (tm) tm.addEventListener('change', function() { updateToggle('toggleManu', 'trackManu'); });
+});
 </script>

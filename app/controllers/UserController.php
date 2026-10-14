@@ -200,6 +200,14 @@ class UserController extends Controller
             $this->redirect('/perfil/definicoes');
         }
 
+        // Rate limiting: máx 5 tentativas de alteração de senha por utilizador em 15 minutos
+        $rlKey = 'alterar_senha_' . (int) $_SESSION['user_id'];
+        if (RateLimiter::tooManyAttempts($rlKey, 5, 900)) {
+            flash('error_senha', 'Demasiadas tentativas de alteração de senha. Aguarde 15 minutos.');
+            $this->redirect('/perfil/definicoes');
+        }
+        RateLimiter::hit($rlKey, 900);
+
         $userId        = (int) $_SESSION['user_id'];
         $senhaAtual    = $_POST['senha_atual'] ?? '';
         $novaSenha     = $_POST['nova_senha'] ?? '';

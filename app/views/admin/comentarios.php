@@ -58,7 +58,7 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
       <div class="filter-search-box">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="filtroTexto" placeholder="Pesquisar por texto, morador ou ocorrência..." autocomplete="off">
-        <button type="button" id="btnLimparBusca" onclick="limparBusca()" style="display:none;color:var(--text-muted);font-size:14px;cursor:pointer;">&times;</button>
+        <button type="button" id="btnLimparBusca" style="display:none;color:var(--text-muted);font-size:14px;cursor:pointer;">&times;</button>
       </div>
 
       <!-- Filtro por Estado do Autor -->
@@ -147,7 +147,9 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
                       <span class="badge badge--active">Ativo</span>
                     <?php endif; ?>
                     <?php if ($temBi): ?>
-                      <span class="badge badge--bi" title="Documento de Identidade Verificado">BI ✓</span>
+                      <span class="badge badge--bi" title="Documento de Identidade Verificado" style="display:inline-flex;align-items:center;gap:3px;">
+                        BI <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
                     <?php endif; ?>
                   </div>
                   <div class="comment-card__meta">
@@ -160,8 +162,9 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
 
               <!-- Contexto da Ocorrência -->
               <div class="comment-card__context">
-                <span class="context-pill">
-                  📍 <?= e($c['bairro_nome'] ?? 'Luanda') ?>
+                <span class="context-pill" style="display:inline-flex;align-items:center;gap:4px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <?= e($c['bairro_nome'] ?? 'Luanda') ?>
                 </span>
                 <?php if (!empty($c['categoria_nome'])): ?>
                   <span class="context-pill context-pill--category">
@@ -188,7 +191,7 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
             <div class="comment-card__actions">
               <div class="actions-left">
                 <!-- Botão Aviso de Bons Modos Imediato -->
-                <button type="button" class="action-btn action-btn--warn" onclick="openWarnModal(<?= (int)$c['user_id'] ?>, '<?= e(addslashes($c['autor_nome'])) ?>')">
+                <button type="button" class="action-btn action-btn--warn js-btn-warn" data-user-id="<?= (int)$c['user_id'] ?>" data-user-name="<?= e($c['autor_nome']) ?>">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                   Aviso de Conduta
                 </button>
@@ -201,7 +204,7 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
               </div>
 
               <!-- Eliminar Comentário -->
-              <form action="<?= url('admin/comentarios/' . $c['id'] . '/eliminar') ?>" method="POST" style="margin:0;" onsubmit="return confirm('Tem a certeza que deseja eliminar este comentário definitivamente?');">
+              <form action="<?= url('admin/comentarios/' . $c['id'] . '/eliminar') ?>" method="POST" style="margin:0;" class="js-delete-comment-form">
                 <?= csrfField() ?>
                 <button type="submit" class="action-btn action-btn--delete">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -217,7 +220,7 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
       <div id="noFilterResults" style="display:none;text-align:center;padding:56px 20px;color:var(--text-muted);">
         <p style="font-weight:700;font-size:15px;color:var(--text-primary);margin-bottom:6px;">Nenhum comentário corresponde aos filtros</p>
         <p style="font-size:13px;margin:0;">Tente pesquisar com outro termo ou redefinir os seletores.</p>
-        <button type="button" onclick="resetFiltros()" class="btn btn--ghost btn--sm" style="margin-top:14px;">Limpar Filtros</button>
+        <button type="button" id="btnResetFiltros" class="btn btn--ghost btn--sm" style="margin-top:14px;">Limpar Filtros</button>
       </div>
 
     <?php endif; ?>
@@ -241,7 +244,7 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
           <h3 style="margin:0;font-size:1.1rem;font-weight:800;color:#FFF;">Notificação de Bons Modos</h3>
         </div>
       </div>
-      <button onclick="closeWarnModal()" style="background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.7);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.15)';this.style.color='#FFF'" onmouseleave="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.7)'">&times;</button>
+      <button class="js-warn-close-btn" style="background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.7);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;">&times;</button>
     </div>
 
     <!-- Corpo do modal -->
@@ -256,14 +259,14 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
       <div style="margin-bottom:14px;">
         <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Modelos Rápidos de Orientação</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" onclick="useWarnPreset(1)" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--border-subtle);color:var(--text-secondary);cursor:pointer;">
-            💬 Respeito Mútuo
+          <button type="button" class="js-warn-preset" data-preset="1" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--border-subtle);color:var(--text-secondary);cursor:pointer;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Respeito Mútuo
           </button>
-          <button type="button" onclick="useWarnPreset(2)" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--border-subtle);color:var(--text-secondary);cursor:pointer;">
-            ⚠️ Linguagem Ofensiva
+          <button type="button" class="js-warn-preset" data-preset="2" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--border-subtle);color:var(--text-secondary);cursor:pointer;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Linguagem Ofensiva
           </button>
-          <button type="button" onclick="useWarnPreset(3)" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--border-subtle);color:var(--text-secondary);cursor:pointer;">
-            🚫 Publicação Fora de Tópico
+          <button type="button" class="js-warn-preset" data-preset="3" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--border-subtle);color:var(--text-secondary);cursor:pointer;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Publicação Fora de Tópico
           </button>
         </div>
       </div>
@@ -277,7 +280,7 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
         </div>
 
         <div style="display:flex;justify-content:flex-end;gap:10px;">
-          <button type="button" onclick="closeWarnModal()" class="btn btn--ghost btn--sm">Cancelar</button>
+          <button type="button" class="js-close-warn btn btn--ghost btn--sm">Cancelar</button>
           <button type="submit" style="display:flex;align-items:center;gap:7px;background:var(--brand-baia);color:#FFF;padding:10px 22px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(31,111,107,0.35);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             Enviar Notificação
@@ -658,10 +661,15 @@ $totalVerificados = count(array_filter($comentarios, fn($c) => !empty($c['bi_fre
   justify-content: center;
   margin: 0 auto 16px;
 }
+
+.js-warn-close-btn:hover {
+  background: rgba(255,255,255,0.15) !important;
+  color: #FFF !important;
+}
 </style>
 
 <!-- ══ SCRIPT DE FILTRAGEM DINÂMICA E MODERAÇÃO ═════════════════════ -->
-<script>
+<script nonce="<?= e(CSP_NONCE) ?>">
 const warnPresets = {
   1: "Estimado(a) morador(a), pedimos a gentileza de manter o respeito e linguagem adequada ao interagir com outros membros da comunidade na plataforma Djumbai.",
   2: "AVISO DE CONDUTA: O seu comentário foi sinalizado pela moderação por conter linguagem imprópria ou desrespeitosa.",
@@ -785,4 +793,13 @@ inputBusca.addEventListener('input', filtrarComentarios);
 selectStatus.addEventListener('change', filtrarComentarios);
 selectPeriodo.addEventListener('change', filtrarComentarios);
 selectOrdem.addEventListener('change', filtrarComentarios);
+
+// ── EVENT BINDINGS (CSP-compliant) ───────────────────────────────
+btnLimparBusca.addEventListener('click', limparBusca);
+document.getElementById('btnResetFiltros').addEventListener('click', resetFiltros);
+document.querySelectorAll('.js-btn-warn').forEach(b => b.addEventListener('click', function(){ openWarnModal(this.dataset.userId, this.dataset.userName); }));
+document.querySelectorAll('.js-delete-comment-form').forEach(f => f.addEventListener('submit', function(e){ if(!confirm('Tem a certeza que deseja eliminar este comentário definitivamente?')) e.preventDefault(); }));
+document.querySelectorAll('.js-warn-close-btn').forEach(b => b.addEventListener('click', closeWarnModal));
+document.querySelectorAll('.js-warn-preset').forEach(b => b.addEventListener('click', function(){ useWarnPreset(this.dataset.preset); }));
+document.querySelectorAll('.js-close-warn').forEach(b => b.addEventListener('click', closeWarnModal));
 </script>

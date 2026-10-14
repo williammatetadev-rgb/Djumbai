@@ -30,9 +30,8 @@ if ($appDebug && $appEnv === 'development') {
     error_reporting(0);
 }
 
-// 3. Aplica cabeçalhos de segurança (CSP, X-Frame-Options, X-Content-Type-Options, etc.)
+// 3. Carrega middleware de cabeçalhos de segurança (aplicado após sessão iniciada, para incluir nonce CSP)
 require_once APP_PATH . '/core/SecurityHeaders.php';
-SecurityHeaders::apply();
 
 // 4. Configura e inicia sessões de forma estritamente blindada
 if (session_status() === PHP_SESSION_NONE) {
@@ -56,6 +55,14 @@ if (session_status() === PHP_SESSION_NONE) {
 
     session_start();
 }
+
+// 4.1 Gera um nonce criptográfico por pedido para CSP (permite scripts inline legitimados, bloqueia injecções)
+$cspNonce = bin2hex(random_bytes(16));
+define('CSP_NONCE', $cspNonce);
+$_SESSION['_csp_nonce'] = $cspNonce;
+
+// Aplica cabeçalhos de segurança (CSP com nonce, X-Frame-Options, X-Content-Type-Options, etc.)
+SecurityHeaders::apply();
 
 // 5. Carrega o núcleo do sistema
 require_once APP_PATH . '/core/SecurityLogger.php';
@@ -123,7 +130,7 @@ $router->get( '/login',                      'AuthController',     'loginForm');
 $router->post('/login',                      'AuthController',     'login');
 $router->get( '/cadastro',                   'AuthController',     'cadastroForm');
 $router->post('/cadastro',                   'AuthController',     'cadastro');
-$router->get( '/logout',                     'AuthController',     'logout');
+$router->post('/logout',                     'AuthController',     'logout');
 
 // ─── Painel & Perfil do Cidadão ──────────────────────────────────
 $router->get( '/perfil',                     'UserController',     'dashboard');

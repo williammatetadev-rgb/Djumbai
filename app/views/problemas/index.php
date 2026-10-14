@@ -10,6 +10,15 @@ $hasActiveFilters = !empty($filtros['q'])
   || (!empty($filtros['ordem']) && $filtros['ordem'] !== 'populares');
 ?>
 
+<style>
+.js-btn-hover:hover { transform: translateY(-1px); }
+.js-search-input:focus { border-color: var(--brand-baia); }
+.js-search-btn:hover { filter: brightness(1.1); }
+.js-problem-card:hover { box-shadow: var(--shadow-md); border-color: rgba(180,69,31,0.3); }
+.js-problem-title:hover { color: var(--brand-terra); }
+.js-detail-btn:hover { background: var(--brand-terra); color: #FFF; border-color: var(--brand-terra); }
+</style>
+
 <!-- ══ HERO BANNER DA PÁGINA DE EXPLORAR ════════════════════════ -->
 <section style="background: linear-gradient(135deg, #1A1410 0%, #2D221A 60%, #3A2D20 100%); padding: 36px 0 32px; border-bottom: 3px solid var(--brand-dendem); position: relative; overflow: hidden; margin-bottom: 32px;">
   
@@ -39,12 +48,12 @@ $hasActiveFilters = !empty($filtros['q'])
           Ver no Mapa
         </a>
         <?php if (isLoggedIn()): ?>
-          <a href="<?= url('reportar') ?>" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand-terra); color: #FFF; padding: 11px 22px; border-radius: 10px; text-decoration: none; font-size: 13.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(180,69,31,0.4); transition: transform 0.15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+          <a href="<?= url('reportar') ?>" class="js-btn-hover" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand-terra); color: #FFF; padding: 11px 22px; border-radius: 10px; text-decoration: none; font-size: 13.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(180,69,31,0.4); transition: transform 0.15s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Reportar Ocorrência
           </a>
         <?php else: ?>
-          <button type="button" onclick="openAuthPromptModal('reportar')" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand-terra); color: #FFF; padding: 11px 22px; border-radius: 10px; border: none; font-size: 13.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(180,69,31,0.4); cursor: pointer; transition: transform 0.15s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform=''">
+          <button type="button" class="js-auth-report js-btn-hover" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand-terra); color: #FFF; padding: 11px 22px; border-radius: 10px; border: none; font-size: 13.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(180,69,31,0.4); cursor: pointer; transition: transform 0.15s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Reportar Ocorrência
           </button>
@@ -80,10 +89,10 @@ $hasActiveFilters = !empty($filtros['q'])
         <div style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); display:flex; align-items:center;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
-        <input type="text" name="q" value="<?= e($filtros['q'] ?? '') ?>" placeholder="Pesquisar por título, bairro, município ou palavra-chave (ex: esgoto, lixo, água)..." style="width:100%; padding:12px 14px 12px 42px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-sunken); color:var(--text-primary); font-size:13.5px; outline:none; box-sizing:border-box; transition:border-color 0.15s;" onfocus="this.style.borderColor='var(--brand-baia)'" onblur="this.style.borderColor='var(--border-subtle)'">
+        <input type="text" name="q" value="<?= e($filtros['q'] ?? '') ?>" placeholder="Pesquisar por título, bairro, município ou palavra-chave (ex: esgoto, lixo, água)..." class="js-search-input" style="width:100%; padding:12px 14px 12px 42px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--surface-sunken); color:var(--text-primary); font-size:13.5px; outline:none; box-sizing:border-box; transition:border-color 0.15s;">
       </div>
 
-      <button type="submit" style="display:inline-flex; align-items:center; gap:8px; background:var(--brand-baia); color:#FFF; border:none; padding:0 22px; height:44px; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; box-shadow:0 3px 10px rgba(31,111,107,0.3); transition:all 0.15s;" onmouseenter="this.style.filter='brightness(1.1)'" onmouseleave="this.style.filter='none'">
+      <button type="submit" class="js-search-btn" style="display:inline-flex; align-items:center; gap:8px; background:var(--brand-baia); color:#FFF; border:none; padding:0 22px; height:44px; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; box-shadow:0 3px 10px rgba(31,111,107,0.3); transition:all 0.15s;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Pesquisar
       </button>
@@ -137,7 +146,7 @@ $hasActiveFilters = !empty($filtros['q'])
         <!-- Filtro Município -->
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Município:</span>
-          <select onchange="applyFilter('municipio', this.value)" class="form-select" style="padding: 6px 30px 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border-subtle); background-color: var(--surface-card); color: var(--text-primary); cursor: pointer;">
+          <select data-filter-key="municipio" class="form-select js-filter-select" style="padding: 6px 30px 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border-subtle); background-color: var(--surface-card); color: var(--text-primary); cursor: pointer;">
             <option value="0" <?= empty($filtros['municipio']) ? 'selected' : '' ?>>Todos os Municípios</option>
             <?php foreach ($municipios as $mun): ?>
               <option value="<?= $mun['id'] ?>" <?= ((int)($filtros['municipio'] ?? 0) === (int)$mun['id']) ? 'selected' : '' ?>><?= e($mun['nome']) ?></option>
@@ -148,7 +157,7 @@ $hasActiveFilters = !empty($filtros['q'])
         <!-- Filtro Estado -->
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Estado:</span>
-          <select onchange="applyFilter('estado', this.value)" class="form-select" style="padding: 6px 30px 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border-subtle); background-color: var(--surface-card); color: var(--text-primary); cursor: pointer;">
+          <select data-filter-key="estado" class="form-select js-filter-select" style="padding: 6px 30px 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border-subtle); background-color: var(--surface-card); color: var(--text-primary); cursor: pointer;">
             <option value="0" <?= empty($filtros['estado']) ? 'selected' : '' ?>>Todos os Estados</option>
             <option value="1" <?= ((int)($filtros['estado'] ?? 0) === 1) ? 'selected' : '' ?>>Pendentes</option>
             <option value="2" <?= ((int)($filtros['estado'] ?? 0) === 2) ? 'selected' : '' ?>>Em Análise</option>
@@ -160,7 +169,7 @@ $hasActiveFilters = !empty($filtros['q'])
         <!-- Ordenação -->
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Ordenar por:</span>
-          <select onchange="applyFilter('ordem', this.value)" class="form-select" style="padding: 6px 30px 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border-subtle); background-color: var(--surface-card); color: var(--text-primary); cursor: pointer;">
+          <select data-filter-key="ordem" class="form-select js-filter-select" style="padding: 6px 30px 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border-subtle); background-color: var(--surface-card); color: var(--text-primary); cursor: pointer;">
             <option value="populares" <?= (($filtros['ordem'] ?? '') === 'populares') ? 'selected' : '' ?>>Mais Apoiados (Populares)</option>
             <option value="recentes" <?= (($filtros['ordem'] ?? '') === 'recentes') ? 'selected' : '' ?>>Mais Recentes</option>
             <option value="antigos" <?= (($filtros['ordem'] ?? '') === 'antigos') ? 'selected' : '' ?>>Mais Antigos</option>
@@ -198,7 +207,7 @@ $hasActiveFilters = !empty($filtros['q'])
       <?php if (isLoggedIn()): ?>
         <a href="<?= url('reportar') ?>" class="btn btn--primary btn--sm">Reportar Novo Problema</a>
       <?php else: ?>
-        <button type="button" onclick="openAuthPromptModal('reportar')" class="btn btn--primary btn--sm">Reportar Novo Problema</button>
+        <button type="button" class="js-auth-report btn btn--primary btn--sm">Reportar Novo Problema</button>
       <?php endif; ?>
     </div>
   <?php else: ?>
@@ -207,7 +216,7 @@ $hasActiveFilters = !empty($filtros['q'])
       <?php foreach ($problemas as $prob): ?>
         <?php $corEstado = $prob['estado_cor'] ?? '#6B5A4A'; ?>
         
-        <article style="background: var(--surface-card); border-radius: 14px; border: 1px solid var(--border-subtle); padding: 22px 24px; box-shadow: var(--shadow-sm); transition: all 0.2s; position: relative;" onmouseenter="this.style.boxShadow='var(--shadow-md)'; this.style.borderColor='rgba(180,69,31,0.3)';" onmouseleave="this.style.boxShadow='var(--shadow-sm)'; this.style.borderColor='var(--border-subtle)';">
+        <article class="js-problem-card" style="background: var(--surface-card); border-radius: 14px; border: 1px solid var(--border-subtle); padding: 22px 24px; box-shadow: var(--shadow-sm); transition: all 0.2s; position: relative;">
           
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
             
@@ -228,7 +237,7 @@ $hasActiveFilters = !empty($filtros['q'])
 
               <!-- Título com Link -->
               <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin: 0 0 10px; line-height: 1.3;">
-                <a href="<?= url('problemas/' . $prob['id']) ?>" style="color: inherit; text-decoration: none;" onmouseenter="this.style.color='var(--brand-terra)'" onmouseleave="this.style.color='inherit'">
+                <a href="<?= url('problemas/' . $prob['id']) ?>" class="js-problem-title" style="color: inherit; text-decoration: none;">
                   <?= e($prob['titulo']) ?>
                 </a>
               </h2>
@@ -259,19 +268,19 @@ $hasActiveFilters = !empty($filtros['q'])
             <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
               
               <!-- Botão Apoiar -->
-              <button class="widget-vote-btn js-vote-btn" data-id="<?= $prob['id'] ?>" title="Apoiar este problema" <?= !isLoggedIn() ? 'onclick="if(typeof openAuthPromptModal===\'function\'){openAuthPromptModal(\'confirmar\');} return false;"' : '' ?> style="display: inline-flex; align-items: center; gap: 6px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--brand-baia); transition: all 0.15s;">
+              <button class="widget-vote-btn js-vote-btn<?= !isLoggedIn() ? ' js-vote-auth' : '' ?>" data-id="<?= $prob['id'] ?>" title="Apoiar este problema" style="display: inline-flex; align-items: center; gap: 6px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--brand-baia); transition: all 0.15s;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 2-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
                 <span class="js-vote-count"><?= number_format($prob['total_confirmacoes']) ?></span>
               </button>
 
               <!-- Botão Ver Detalhes -->
               <?php if (isLoggedIn()): ?>
-                <a href="<?= url('problemas/' . $prob['id']) ?>" style="display: inline-flex; align-items: center; gap: 6px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 10px; font-size: 12.5px; font-weight: 700; text-decoration: none; transition: all 0.15s;" onmouseenter="this.style.background='var(--brand-terra)'; this.style.color='#FFF'; this.style.borderColor='var(--brand-terra)';" onmouseleave="this.style.background='var(--surface-sunken)'; this.style.color='var(--text-secondary)'; this.style.borderColor='var(--border-subtle)';">
+                <a href="<?= url('problemas/' . $prob['id']) ?>" class="js-detail-btn" style="display: inline-flex; align-items: center; gap: 6px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 10px; font-size: 12.5px; font-weight: 700; text-decoration: none; transition: all 0.15s;">
                   Ver Detalhes
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                 </a>
               <?php else: ?>
-                <button type="button" onclick="openAuthPromptModal('ver_detalhes')" style="display: inline-flex; align-items: center; gap: 6px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 10px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;" onmouseenter="this.style.background='var(--brand-terra)'; this.style.color='#FFF'; this.style.borderColor='var(--brand-terra)';" onmouseleave="this.style.background='var(--surface-sunken)'; this.style.color='var(--text-secondary)'; this.style.borderColor='var(--border-subtle)';">
+                <button type="button" class="js-detail-btn js-auth-detail" style="display: inline-flex; align-items: center; gap: 6px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 10px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
                   Ver Detalhes
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
@@ -307,7 +316,7 @@ $hasActiveFilters = !empty($filtros['q'])
 
 </div>
 
-<script>
+<script nonce="<?= e(CSP_NONCE) ?>">
 function applyFilter(key, value) {
   const url = new URL(window.location.href);
   if (value && value !== '0' && value !== 'populares') {
@@ -318,4 +327,21 @@ function applyFilter(key, value) {
   url.searchParams.delete('pagina');
   window.location.href = url.toString();
 }
+
+document.querySelectorAll('.js-filter-select').forEach(s => s.addEventListener('change', function(){
+  applyFilter(this.dataset.filterKey, this.value);
+}));
+
+document.querySelectorAll('.js-auth-report').forEach(b => b.addEventListener('click', function(){
+  openAuthPromptModal('reportar');
+}));
+
+document.querySelectorAll('.js-auth-detail').forEach(b => b.addEventListener('click', function(){
+  openAuthPromptModal('ver_detalhes');
+}));
+
+document.querySelectorAll('.js-vote-auth').forEach(b => b.addEventListener('click', function(){
+  if (typeof openAuthPromptModal === 'function') openAuthPromptModal('confirmar');
+  return false;
+}));
 </script>

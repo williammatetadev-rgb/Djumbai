@@ -1,7 +1,8 @@
 <?php
 /**
  * Djumbai — Sistema de Rate Limiting & Proteção Anti-Brute Force
- * Limita tentativas de login, cadastro, envios de formulários e acessos excessivos por IP
+ * Limita tentativas de login, cadastro, envios de formulários e acessos excessivos por IP.
+ * Protegido com flock() atómico contra race conditions e limpeza periódica de ficheiros expirados.
  */
 
 class RateLimiter
@@ -18,8 +19,32 @@ class RateLimiter
      */
     public static function tooManyAttempts(string $action, int $maxAttempts = 5, int $decaySeconds = 900): bool
     {
+        self::garbageCollect();
+
         $key  = self::getKey($action);
-        $data = self::read($key);
+        $file = self::getFilePath($key);
+
+        if (!file_exists($file)) {
+            return false;
+        }
+
+        $fp = @fopen($file, 'r');
+        if (!$fp) {
+            return false;
+        }
+
+        $data = null;
+        if (flock($fp, LOCK_SH)) {
+            $content = stream_get_contents($fp);
+            if ($content) {
+                $decoded = json_decode($content, true);
+                if (is_array($decoded)) {
+                    $data = $decoded;
+                }
+            }
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
 
         if (!$data) {
             return false;
@@ -35,24 +60,53 @@ class RateLimiter
     }
 
     /**
-     * Incrementa o contador de tentativas para a acção
+     * Incrementa o contador de tentativas para a acção de forma atómica com flock(LOCK_EX)
      */
     public static function hit(string $action, int $decaySeconds = 900): int
     {
-        $key  = self::getKey($action);
-        $data = self::read($key);
+        self::garbageCollect();
 
-        if (!$data || time() > $data['expires_at']) {
-            $data = [
-                'attempts'   => 1,
-                'expires_at' => time() + $decaySeconds,
-            ];
-        } else {
-            $data['attempts']++;
+        $key  = self::getKey($action);
+        $file = self::getFilePath($key);
+
+        $fp = fopen($file, 'c+');
+        if (!$fp) {
+            return 1;
         }
 
-        self::write($key, $data);
-        return $data['attempts'];
+        $attempts = 1;
+
+        if (flock($fp, LOCK_EX)) {
+            $content = stream_get_contents($fp);
+            $data    = null;
+
+            if ($content) {
+                $decoded = json_decode($content, true);
+                if (is_array($decoded)) {
+                    $data = $decoded;
+                }
+            }
+
+            if (!$data || time() > ($data['expires_at'] ?? 0)) {
+                $data = [
+                    'attempts'   => 1,
+                    'expires_at' => time() + $decaySeconds,
+                ];
+            } else {
+                $data['attempts']++;
+            }
+
+            $attempts = $data['attempts'];
+
+            ftruncate($fp, 0);
+            rewind($fp);
+            fwrite($fp, json_encode($data));
+            fflush($fp);
+            flock($fp, LOCK_UN);
+        }
+
+        fclose($fp);
+        return $attempts;
     }
 
     /**
@@ -61,7 +115,29 @@ class RateLimiter
     public static function availableIn(string $action): int
     {
         $key  = self::getKey($action);
-        $data = self::read($key);
+        $file = self::getFilePath($key);
+
+        if (!file_exists($file)) {
+            return 0;
+        }
+
+        $fp = @fopen($file, 'r');
+        if (!$fp) {
+            return 0;
+        }
+
+        $data = null;
+        if (flock($fp, LOCK_SH)) {
+            $content = stream_get_contents($fp);
+            if ($content) {
+                $decoded = json_decode($content, true);
+                if (is_array($decoded)) {
+                    $data = $decoded;
+                }
+            }
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
 
         if (!$data) {
             return 0;
@@ -83,6 +159,53 @@ class RateLimiter
     }
 
     /**
+     * Limpeza probabilística (garbage collection) de ficheiros expirados (1 em 50 pedidos)
+     */
+    public static function garbageCollect(): void
+    {
+        if (mt_rand(1, 50) !== 1) {
+            return;
+        }
+
+        if (!is_dir(self::$storageDir)) {
+            return;
+        }
+
+        $now   = time();
+        $files = @glob(self::$storageDir . '/*.json');
+
+        if (!is_array($files)) {
+            return;
+        }
+
+        foreach ($files as $filePath) {
+            $fp = @fopen($filePath, 'r');
+            if (!$fp) {
+                continue;
+            }
+
+            $shouldDelete = false;
+            if (flock($fp, LOCK_SH)) {
+                $content = stream_get_contents($fp);
+                if ($content) {
+                    $data = json_decode($content, true);
+                    if (is_array($data) && isset($data['expires_at']) && $now > $data['expires_at']) {
+                        $shouldDelete = true;
+                    }
+                } else {
+                    $shouldDelete = true; // Arquivo vazio/corrompido
+                }
+                flock($fp, LOCK_UN);
+            }
+            fclose($fp);
+
+            if ($shouldDelete) {
+                @unlink($filePath);
+            }
+        }
+    }
+
+    /**
      * Gera uma chave única combinando acção e IP do cliente
      */
     private static function getKey(string $action): string
@@ -97,27 +220,5 @@ class RateLimiter
             mkdir(self::$storageDir, 0750, true);
         }
         return self::$storageDir . '/' . $key . '.json';
-    }
-
-    private static function read(string $key): ?array
-    {
-        $file = self::getFilePath($key);
-        if (!file_exists($file)) {
-            return null;
-        }
-
-        $content = file_get_contents($file);
-        if (!$content) {
-            return null;
-        }
-
-        $data = json_decode($content, true);
-        return is_array($data) ? $data : null;
-    }
-
-    private static function write(string $key, array $data): void
-    {
-        $file = self::getFilePath($key);
-        file_put_contents($file, json_encode($data), LOCK_EX);
     }
 }

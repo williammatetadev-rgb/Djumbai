@@ -30,7 +30,7 @@
             <?= icon('plus', 16, '', '#FFF') ?> Reportar Novo Problema
           </a>
         <?php else: ?>
-          <button type="button" onclick="openAuthPromptModal('reportar')" class="btn btn--primary btn--sm">
+          <button type="button" class="js-auth-reportar btn btn--primary btn--sm">
             <?= icon('plus', 16, '', '#FFF') ?> Reportar Novo Problema
           </button>
         <?php endif; ?>
@@ -163,18 +163,14 @@
                     <?= e($p['estado_nome']) ?>
                   </span>
                   <?php if ($p['total_confirmacoes'] >= 3): ?>
-                    <span class="badge badge--critico" title="Elevada confirmação comunitária">
-                      🔥 Crítico
+                    <span class="badge badge--critico" title="Elevada confirmação comunitária" style="display:inline-flex;align-items:center;gap:3px;">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Crítico
                     </span>
                   <?php endif; ?>
                 </div>
 
                 <h4 class="mapa-card-item__title">
-                  <?php if (isLoggedIn()): ?>
-                    <a href="<?= url('problemas/' . $p['id']) ?>"><?= e($p['titulo']) ?></a>
-                  <?php else: ?>
-                    <a href="javascript:void(0)" onclick="openAuthPromptModal('ocorrencia')"><?= e($p['titulo']) ?></a>
-                  <?php endif; ?>
+                  <a href="<?= url('problemas/' . $p['id']) ?>" class="js-sidebar-card-link"><?= e($p['titulo']) ?></a>
                 </h4>
 
                 <div class="mapa-card-item__meta">
@@ -558,9 +554,9 @@
 </style>
 
 <!-- Script Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script nonce="<?= e(CSP_NONCE) ?>" src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-<script>
+<script nonce="<?= e(CSP_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function () {
   const defaultLat = -8.838333;
   const defaultLng = 13.234444;
@@ -646,13 +642,13 @@ document.addEventListener('DOMContentLoaded', function () {
             <span class="mapa-popup__tag" style="background:${p.estado_cor}20;color:${p.estado_cor};">
               ${p.estado}
             </span>
-            ${isCritico ? '<span class="badge badge--critico" style="font-size:9px;margin-left:4px;">🔥 Crítico</span>' : ''}
+            ${isCritico ? '<span class="badge badge--critico" style="font-size:9px;margin-left:4px;display:inline-flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Crítico</span>' : ''}
             <h4 class="mapa-popup__title">
               <a href="${p.url}">${p.titulo}</a>
             </h4>
             <div class="mapa-popup__meta">
-              📍 <strong>${p.bairro}</strong>${p.municipio ? ', ' + p.municipio : ''}<br>
-              💬 ${p.total_confirmacoes} confirmações comunitárias
+              <span style="display:inline-flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> <strong>${p.bairro}</strong>${p.municipio ? ', ' + p.municipio : ''}</span><br>
+              <span style="display:inline-flex;align-items:center;gap:3px;margin-top:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${p.total_confirmacoes} confirmações comunitárias</span>
             </div>
             <a href="${p.url}" class="mapa-popup__btn">Ver Detalhes do Reporte</a>
           </div>
@@ -749,16 +745,13 @@ document.addEventListener('DOMContentLoaded', function () {
             <span class="badge__dot" style="background:${p.estado_cor};"></span>
             ${p.estado}
           </span>
-          ${p.total_confirmacoes >= 3 ? '<span class="badge badge--critico">🔥 Crítico</span>' : ''}
+          ${p.total_confirmacoes >= 3 ? '<span class="badge badge--critico" style="display:inline-flex;align-items:center;gap:3px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Crítico</span>' : ''}
         </div>
         <h4 class="mapa-card-item__title">
-          ${(typeof window.IS_LOGGED_IN !== 'undefined' && !window.IS_LOGGED_IN)
-            ? `<a href="javascript:void(0)" onclick="openAuthPromptModal('ocorrencia')">${p.titulo}</a>`
-            : `<a href="${p.url}">${p.titulo}</a>`
-          }
+          <a href="${p.url}" class="js-sidebar-card-link">${p.titulo}</a>
         </h4>
         <div class="mapa-card-item__meta">
-          <span>📍 ${p.bairro}${p.municipio ? ', ' + p.municipio : ''}</span>
+          <span style="display:inline-flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${p.bairro}${p.municipio ? ', ' + p.municipio : ''}</span>
           <span>•</span>
           <span><strong>${p.total_confirmacoes}</strong> confirmações</span>
         </div>
@@ -797,5 +790,29 @@ document.addEventListener('DOMContentLoaded', function () {
       map.setView([defaultLat, defaultLng], defaultZoom);
     });
   }
+
+  // Delegated listener for sidebar card title links (static + dynamically rendered)
+  const sidebarList = document.getElementById('mapa-sidebar-list');
+  if (sidebarList) {
+    sidebarList.addEventListener('click', function (e) {
+      const link = e.target.closest('.js-sidebar-card-link');
+      if (!link) return;
+      const isLoggedOut = typeof window.IS_LOGGED_IN !== 'undefined' && !window.IS_LOGGED_IN;
+      if (isLoggedOut) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.openAuthPromptModal === 'function') {
+          window.openAuthPromptModal('ocorrencia');
+        }
+      }
+    });
+  }
+
+  // Reportar auth prompt buttons
+  document.querySelectorAll('.js-auth-reportar').forEach(b => b.addEventListener('click', function(){
+    if (typeof window.openAuthPromptModal === 'function') {
+      window.openAuthPromptModal('reportar');
+    }
+  }));
 });
 </script>
