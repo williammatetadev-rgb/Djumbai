@@ -266,22 +266,27 @@ class AdminController extends Controller
         // O Administrador Principal (Super Admin / Conta Raiz) não aparece na tabela operacional da equipa
         $equipa = array_values(array_filter($equipaBruta, fn($adm) => $adm['email'] !== 'admin@djumbai.ao' && (int)$adm['id'] !== 1));
 
-        // Contagens globais para badges das abas
-        $todosCidadaos    = $this->userModel->listarComEstatisticas('', '', '', 0, 'cidadao');
-        $totalPendentesBi = count(array_filter($todosCidadaos, fn($u) => ($u['bi_status'] ?? '') === 'pendente'));
+        // Contagens globais para badges e cards de métricas (sempre consistentes independentemente da aba ativa ou filtros)
+        $todosCidadaos      = $this->userModel->listarComEstatisticas('', '', '', 0, 'cidadao');
+        $totalCidadaos      = count($todosCidadaos);
+        $totalPendentesBi   = count(array_filter($todosCidadaos, fn($u) => ($u['bi_status'] ?? '') === 'pendente'));
+        $totalVerificadosBi = count(array_filter($todosCidadaos, fn($u) => ($u['bi_status'] ?? '') === 'verificado'));
+        $totalSuspensos     = count(array_filter($todosCidadaos, fn($u) => ($u['status'] ?? '') === 'banido'));
 
         $db = Database::getInstance();
         $municipios = $db->query("SELECT id, nome FROM municipios ORDER BY nome ASC")->fetchAll();
 
         $this->render('admin/usuarios', [
-            'titulo'           => 'Gestão de Utilizadores, Verificação & Equipa – Djumbai',
-            'aba'              => $aba,
-            'cidadaos'         => $cidadaos,
-            'equipa'           => $equipa,
-            'totalCidadaos'    => count($todosCidadaos),
-            'totalPendentesBi' => $totalPendentesBi,
-            'totalEquipa'      => count($equipa),
-            'municipios'       => $municipios,
+            'titulo'             => 'Gestão de Utilizadores, Verificação & Equipa – Djumbai',
+            'aba'                => $aba,
+            'cidadaos'           => $cidadaos,
+            'equipa'             => $equipa,
+            'totalCidadaos'      => $totalCidadaos,
+            'totalPendentesBi'   => $totalPendentesBi,
+            'totalVerificadosBi' => $totalVerificadosBi,
+            'totalSuspensos'     => $totalSuspensos,
+            'totalEquipa'        => count($equipa),
+            'municipios'         => $municipios,
             'filtros'          => [
                 'q'         => $busca,
                 'status'    => $status,

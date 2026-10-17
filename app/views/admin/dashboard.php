@@ -23,7 +23,7 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
 ?>
 
 <!-- Leaflet CSS para o Mini-Mapa Integrado -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/leaflet/leaflet.css" />
 
 <style>
   /* Estilização Executiva do Dashboard */
@@ -636,7 +636,7 @@ $periodoAtualLabel = $rotulosPeriodo[$periodo] ?? 'Histórico Total';
 </div>
 
 <!-- Leaflet JS & Scripts de Inicialização -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" nonce="<?= e(CSP_NONCE) ?>"></script>
+<script src="<?= BASE_URL ?>/js/leaflet/leaflet.js" nonce="<?= e(CSP_NONCE) ?>"></script>
 <script nonce="<?= e(CSP_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function () {
   // ── 1. MODAL DE DESPACHO RÁPIDO ────────────────────────────────

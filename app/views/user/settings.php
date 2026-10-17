@@ -41,7 +41,7 @@
     }
 
     $biBadge = match($biStatus) {
-        'verificado'  => ['label' => 'Selo Verificado', 'bg' => 'rgba(76,175,80,0.15)', 'color' => '#2E7D32', 'border' => '#4CAF50'],
+        'verificado'  => ['label' => 'Verificado', 'bg' => 'rgba(76,175,80,0.15)', 'color' => '#2E7D32', 'border' => '#4CAF50'],
         'pendente'    => ['label' => 'Em Análise pela Moderação', 'bg' => 'rgba(217,154,30,0.15)', 'color' => '#B78103', 'border' => 'var(--brand-dendem)'],
         'rejeitado'   => ['label' => 'Documento Rejeitado', 'bg' => 'rgba(229,57,53,0.12)', 'color' => '#C62828', 'border' => '#E53935'],
         default       => ['label' => 'Não Enviado', 'bg' => 'rgba(107,90,74,0.12)', 'color' => '#6B5A4A', 'border' => 'var(--border-subtle)'],
@@ -335,6 +335,34 @@
         <input type="hidden" name="bi_frente_base64" id="biFrenteBase64" value="">
         <input type="hidden" name="bi_verso_base64" id="biVersoBase64" value="">
 
+        <!-- Número do Bilhete de Identidade com Verificação de Duplicado em Tempo Real -->
+        <div style="margin-bottom: 18px;">
+          <label for="biNumeroInput" style="display:block; font-size:11.5px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">
+            Número do Bilhete de Identidade (BI) *
+          </label>
+          <input 
+            type="text" 
+            name="bi_numero" 
+            id="biNumeroInput" 
+            value="<?= e($perfil['bi_numero'] ?? '') ?>" 
+            placeholder="Ex: 009567327LA041" 
+            class="form-input" 
+            style="font-size:13.5px; padding:10px 14px; text-transform:uppercase;"
+            maxlength="25"
+            required
+            autocomplete="off"
+          />
+          <span style="font-size:11px; color:var(--text-muted); margin-top:4px; display:block;">
+            Insira o número de identificação como consta no seu documento oficial angolano.
+          </span>
+
+          <!-- Banner de Aviso de BI já registado no sistema -->
+          <div id="biDuplicateAlert" style="display:none; margin-top:8px; padding:10px 14px; border-radius:8px; background:rgba(229,57,53,0.12); border:1px solid rgba(229,57,53,0.35); color:#C62828; font-size:12px; font-weight:600; display:none; align-items:center; gap:8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="biDuplicateMessage">Aviso: Este número de Bilhete de Identidade já está associado a outra conta no sistema!</span>
+          </div>
+        </div>
+
         <!-- ── MODO 1: UPLOAD DOS DOIS FICHEIROS (FRENTE E VERSO) ── -->
         <div id="sectionBiUpload">
           <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 16px;line-height:1.4;">
@@ -366,64 +394,108 @@
           </div>
         </div>
 
-        <!-- ── MODO 2: SCANNER / CÂMARA DO BI ── -->
+        <!-- ── MODO 2: SCANNER INTELIGENTE ORIENTADO (PASSO A PASSO AUTOMÁTICO) ── -->
         <div id="sectionBiScanner" style="display:none;">
 
-          <!-- Opção: Vídeo Webcam ao Vivo -->
-          <div style="background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:12px;padding:16px;margin-bottom:14px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span style="font-size:12.5px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:6px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                Webcam ao Vivo (Vídeo Contínuo)
-              </span>
-              <button type="button" id="btnToggleLiveWebcam" onclick="toggleLiveWebcam()" style="font-size:12px;font-weight:700;color:var(--brand-baia);background:none;border:none;cursor:pointer;text-decoration:underline;">
-                Ativar Webcam
+          <!-- Guia de Passos Sequenciais -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div id="stepBadgeFrente" style="background:rgba(180,69,31,0.1);border:1.5px solid var(--brand-terra);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;transition:all 0.2s;">
+              <span id="stepIconFrente" style="width:24px;height:24px;border-radius:50%;background:var(--brand-terra);color:#FFF;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">1</span>
+              <div>
+                <strong style="font-size:11.5px;display:block;color:var(--text-primary);">Passo 1: Frente</strong>
+                <span id="stepStatusFrente" style="font-size:10.5px;color:var(--brand-terra);font-weight:600;">Posicione a Frente</span>
+              </div>
+            </div>
+
+            <div id="stepBadgeVerso" style="background:var(--surface-sunken);border:1.5px solid var(--border-subtle);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;transition:all 0.2s;opacity:0.6;">
+              <span id="stepIconVerso" style="width:24px;height:24px;border-radius:50%;background:var(--surface-card);color:var(--text-muted);border:1px solid var(--border-subtle);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">2</span>
+              <div>
+                <strong style="font-size:11.5px;display:block;color:var(--text-primary);">Passo 2: Verso</strong>
+                <span id="stepStatusVerso" style="font-size:10.5px;color:var(--text-muted);">Aguardando Frente</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mensagem Dinâmica de Feedback / Validação do Lado -->
+          <div id="scannerFeedbackAlert" style="margin-bottom:12px;padding:10px 14px;border-radius:8px;background:rgba(31,111,107,0.1);border:1px solid rgba(31,111,107,0.25);color:var(--brand-baia);font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all 0.2s;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span id="scannerFeedbackText">Posicione a <strong>FRENTE</strong> do seu Bilhete de Identidade na câmara e clique no botão de escaneamento.</span>
+          </div>
+
+          <!-- Visor da Câmara / Scanner -->
+          <div style="background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:12px;padding:14px;margin-bottom:14px;">
+            <div style="position:relative;background:#0A0705;border-radius:10px;overflow:hidden;aspect-ratio:16/10;margin-bottom:12px;border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;">
+              <video id="scannerVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+              <canvas id="scannerCanvas" style="display:none;"></canvas>
+
+              <!-- Placeholder quando a webcam não está ativa -->
+              <div id="cameraStandbyPlaceholder" style="display:none;position:absolute;inset:0;background:#1A1410;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--brand-dendem)" stroke-width="1.7"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span style="font-size:12.5px;color:rgba(255,255,255,0.7);max-width:280px;line-height:1.4;">
+                  Câmara em espera. Clique no botão abaixo para iniciar ou tirar foto do BI.
+                </span>
+              </div>
+
+              <!-- Enquadramento do Bilhete de Identidade com mira -->
+              <div id="cardOverlayGuide" style="position:absolute;inset:14px;border:2px dashed rgba(217,154,30,0.85);border-radius:8px;pointer-events:none;box-shadow:inset 0 0 0 1000px rgba(0,0,0,0.22);display:flex;flex-direction:column;justify-content:space-between;padding:10px;">
+                <div style="display:flex;justify-content:space-between;">
+                  <span style="background:rgba(0,0,0,0.65);color:#FFF;font-size:10px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:0.4px;" id="overlayGuideSideBadge">ENQUADRE A FRENTE</span>
+                  <span style="background:rgba(0,0,0,0.65);color:var(--brand-dendem);font-size:10px;padding:3px 8px;border-radius:4px;font-weight:700;">MODELO BI ANGOLA</span>
+                </div>
+                <div style="text-align:center;">
+                  <span id="overlayGuideSubtext" style="background:rgba(0,0,0,0.6);color:rgba(255,255,255,0.85);font-size:10.5px;padding:3px 10px;border-radius:4px;">
+                    Mantenha o documento direito e bem iluminado
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão Único Inteligente de Escaneamento -->
+            <div style="display:flex;gap:10px;align-items:center;">
+              <button type="button" id="btnSmartScannerCapture" onclick="executeSmartScanCapture()" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--brand-terra);color:#FFF;border:none;padding:12px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(180,69,31,0.25);transition:all 0.15s;">
+                <svg id="btnSmartIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span id="btnSmartText">Escanear Frente do BI</span>
+              </button>
+
+              <button type="button" id="btnRestartScan" onclick="resetSmartScanner()" style="display:none;background:var(--surface-card);border:1px solid var(--border-subtle);color:var(--text-secondary);padding:12px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;align-items:center;gap:6px;" title="Recomeçar escaneamento">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Recomeçar
               </button>
             </div>
 
-            <!-- Ecrã de vídeo da Webcam e pré-visualização das capturas -->
-            <div id="liveWebcamArea" style="display:none;margin-top:12px;">
-              <div style="position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:16/10;margin-bottom:12px;border:1px solid var(--border-subtle);">
-                <video id="scannerVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>
-                <canvas id="scannerCanvas" style="display:none;"></canvas>
-                <div style="position:absolute;inset:15px;border:2px dashed rgba(217,154,30,0.85);border-radius:8px;pointer-events:none;"></div>
-              </div>
-              <div style="display:flex;gap:10px;margin-bottom:14px;">
-                <button type="button" onclick="captureLiveWebcam('frente')" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;background:var(--brand-terra);color:#FFF;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(180,69,31,0.25);">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Capturar Frente do BI
-                </button>
-                <button type="button" onclick="captureLiveWebcam('verso')" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;background:var(--brand-baia);color:#FFF;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(31,111,107,0.25);">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Capturar Verso do BI
-                </button>
+            <!-- Input nativo de câmara mobile como alternativa direta -->
+            <input type="file" id="guidedNativeCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleGuidedNativeFile(this)">
+
+            <!-- Miniaturas das capturas realizadas com confirmação -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+              <div style="border:1px solid var(--border-subtle);border-radius:8px;padding:8px;background:var(--surface-card);text-align:center;position:relative;" id="boxPreviewFrente">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">1. Frente</span>
+                  <span id="badgeFrenteOk" style="display:none;font-size:9.5px;font-weight:800;background:rgba(76,175,80,0.15);color:#2E7D32;padding:1px 6px;border-radius:4px;border:1px solid #4CAF50;">✓ OK</span>
+                </div>
+                <div id="previewFrenteBox" style="height:65px;background:#1A1410;border-radius:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:10.5px;overflow:hidden;">
+                  Aguardando
+                </div>
               </div>
 
-              <!-- Miniaturas das capturas realizadas -->
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                <div style="border:1px solid var(--border-subtle);border-radius:8px;padding:8px;background:var(--surface-card);text-align:center;">
-                  <span style="font-size:11px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px;">Frente Capturada</span>
-                  <div id="previewFrenteBox" style="height:70px;background:#1A1410;border-radius:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:10.5px;overflow:hidden;">
-                    Sem captura
-                  </div>
+              <div style="border:1px solid var(--border-subtle);border-radius:8px;padding:8px;background:var(--surface-card);text-align:center;position:relative;" id="boxPreviewVerso">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <span style="font-size:11px;font-weight:700;color:var(--text-secondary);">2. Verso</span>
+                  <span id="badgeVersoOk" style="display:none;font-size:9.5px;font-weight:800;background:rgba(76,175,80,0.15);color:#2E7D32;padding:1px 6px;border-radius:4px;border:1px solid #4CAF50;">✓ OK</span>
                 </div>
-                <div style="border:1px solid var(--border-subtle);border-radius:8px;padding:8px;background:var(--surface-card);text-align:center;">
-                  <span style="font-size:11px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px;">Verso Capturado</span>
-                  <div id="previewVersoBox" style="height:70px;background:#1A1410;border-radius:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:10.5px;overflow:hidden;">
-                    Sem captura
-                  </div>
+                <div id="previewVersoBox" style="height:65px;background:#1A1410;border-radius:6px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:10.5px;overflow:hidden;">
+                  Aguardando
                 </div>
               </div>
             </div>
 
-            <div id="webcamHelpTip" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-muted);line-height:1.4;margin-top:6px;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg> <em>Dica:</em> No telemóvel, os botões "Abrir Câmara" acima abrem a câmara fotográfica nativa com nitidez superior.
-            </div>
           </div>
         </div>
 
         <!-- Botões do Rodapé do Formulário -->
         <div style="display:flex;gap:12px;justify-content:flex-end;align-items:center;padding-top:16px;border-top:1px solid var(--border-subtle);">
           <button type="button" onclick="closeBiVerifyModal()" class="btn btn--ghost btn--sm">Cancelar</button>
-          <button type="submit" style="display:inline-flex;align-items:center;gap:8px;background:var(--brand-terra);color:#FFF;border:none;padding:11px 24px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(180,69,31,0.3);">
+          <button type="submit" id="btnSubmitBiVerification" style="display:inline-flex;align-items:center;gap:8px;background:var(--brand-terra);color:#FFF;border:none;padding:11px 24px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(180,69,31,0.3);">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             Submeter Documentos
           </button>
@@ -437,9 +509,21 @@
 
 <script>
 let currentScannerStream = null;
+let currentBiMode = 'upload';
+let smartScannerStep = 'frente'; // 'frente' | 'verso' | 'done'
+let isBiDuplicate = false;
+let biCheckTimeout = null;
+
+// Inicialização dos botões de abertura do modal
+document.querySelectorAll('.js-open-bi-modal').forEach(btn => {
+  btn.addEventListener('click', openBiVerifyModal);
+});
 
 function openBiVerifyModal() {
   document.getElementById('biVerifyModal').style.display = 'flex';
+  if (currentBiMode === 'scanner') {
+    startScannerCamera();
+  }
 }
 
 function closeBiVerifyModal() {
@@ -451,7 +535,47 @@ document.getElementById('biVerifyModal').addEventListener('click', function(e) {
   if (e.target === this) closeBiVerifyModal();
 });
 
+// ── VERIFICAÇÃO EM TEMPO REAL DE NÚMERO DE BI DUPLICADO ──
+const biNumeroInput = document.getElementById('biNumeroInput');
+const biDuplicateAlert = document.getElementById('biDuplicateAlert');
+const biDuplicateMessage = document.getElementById('biDuplicateMessage');
+
+biNumeroInput.addEventListener('input', function() {
+  clearTimeout(biCheckTimeout);
+  const val = this.value.trim().toUpperCase();
+  this.value = val;
+
+  if (val.length < 5) {
+    biDuplicateAlert.style.display = 'none';
+    biNumeroInput.style.borderColor = '';
+    isBiDuplicate = false;
+    return;
+  }
+
+  biCheckTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch('<?= url("perfil/check-bi") ?>?bi=' + encodeURIComponent(val));
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.duplicado) {
+        isBiDuplicate = true;
+        biDuplicateMessage.textContent = data.mensagem || 'Aviso: Este número de Bilhete de Identidade já está registado noutra conta no sistema!';
+        biDuplicateAlert.style.display = 'flex';
+        biNumeroInput.style.borderColor = '#E53935';
+      } else {
+        isBiDuplicate = false;
+        biDuplicateAlert.style.display = 'none';
+        biNumeroInput.style.borderColor = '';
+      }
+    } catch(err) {
+      console.warn('Erro ao verificar duplicidade de BI:', err);
+    }
+  }, 350);
+});
+
+// ── SELETOR DE MODO (UPLOAD TRADICIONAL VS SCANNER ORIENTADO) ──
 function setBiMode(mode) {
+  currentBiMode = mode;
   const btnUpload  = document.getElementById('tabModeUpload');
   const btnScanner = document.getElementById('tabModeScanner');
   const secUpload  = document.getElementById('sectionBiUpload');
@@ -466,7 +590,7 @@ function setBiMode(mode) {
     btnScanner.style.color = 'var(--text-secondary)';
     secUpload.style.display = 'block';
     secScanner.style.display = 'none';
-    stopLiveWebcam();
+    stopScannerCamera();
   } else {
     btnScanner.style.border = '2px solid var(--brand-terra)';
     btnScanner.style.background = 'rgba(180,69,31,0.08)';
@@ -476,6 +600,7 @@ function setBiMode(mode) {
     btnUpload.style.color = 'var(--text-secondary)';
     secUpload.style.display = 'none';
     secScanner.style.display = 'block';
+    startScannerCamera();
   }
 }
 
@@ -488,73 +613,125 @@ function handleModalFileSelect(input, labelId, cardId) {
   }
 }
 
-// ── CAPTURA DIRETA / CÂMARA NATIVA (FUNCIONA EM TODOS OS DISPOSITIVOS) ──
-function handleNativeCameraCapture(input, side) {
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const dataUrl = e.target.result;
-      if (side === 'frente') {
-        document.getElementById('biFrenteBase64').value = dataUrl;
-        document.getElementById('previewFrenteBox').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
-      } else {
-        document.getElementById('biVersoBase64').value = dataUrl;
-        document.getElementById('previewVersoBox').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-}
+// ── CÂMARA DO SCANNER INTELIGENTE ──
+async function startScannerCamera() {
+  const video = document.getElementById('scannerVideo');
+  const placeholder = document.getElementById('cameraStandbyPlaceholder');
+  if (currentScannerStream) return;
 
-// ── WEBCAM EM TEMPO REAL OPCIONAL (PARA QUEM TEM PERMISSÃO HABILITADA) ──
-async function toggleLiveWebcam() {
-  const area = document.getElementById('liveWebcamArea');
-  const btn = document.getElementById('btnToggleLiveWebcam');
-  if (area.style.display === 'block') {
-    stopLiveWebcam();
-  } else {
+  try {
+    let stream = null;
     try {
-      const video = document.getElementById('scannerVideo');
-      let stream = null;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
-        });
-      } catch (e1) {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      }
-
-      currentScannerStream = stream;
-      video.srcObject = stream;
-      area.style.display = 'block';
-      btn.textContent = 'Desligar Webcam';
-      btn.style.color = 'var(--brand-terra)';
-    } catch (err) {
-      alert('Não foi possível aceder à webcam ao vivo. Utilize os botões "Abrir Câmara" acima para tirar a foto diretamente.');
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+      });
+    } catch(e1) {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
     }
+    currentScannerStream = stream;
+    video.srcObject = stream;
+    video.style.display = 'block';
+    placeholder.style.display = 'none';
+  } catch(err) {
+    console.warn('Webcam direta não disponível:', err);
+    video.style.display = 'none';
+    placeholder.style.display = 'flex';
   }
 }
 
-function stopLiveWebcam() {
+function stopScannerCamera() {
   if (currentScannerStream) {
     currentScannerStream.getTracks().forEach(track => track.stop());
     currentScannerStream = null;
   }
-  const area = document.getElementById('liveWebcamArea');
-  const btn = document.getElementById('btnToggleLiveWebcam');
-  if (area) area.style.display = 'none';
-  if (btn) {
-    btn.textContent = 'Ativar Webcam';
-    btn.style.color = 'var(--brand-baia)';
+}
+
+// ── ANÁLISE DE IMAGEM: DETECÇÃO FRENTE VS VERSO DO BI ANGOLANO ──
+// O BI Angolano apresenta no Verso uma mancha preta oval densa no canto superior-direito
+// (impressão digital) e código de barras 1D de alto contraste no canto inferior-esquerdo.
+// Na Frente, o fundo superior-direito é claro e o canto inferior-esquerdo tem faixa dourada suave.
+function analyzeBiSide(canvas) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  if (!w || !h) return { detectedSide: 'frente' };
+
+  try {
+    const imgData = ctx.getImageData(0, 0, w, h).data;
+
+    // 1. Amostrar região superior-direita onde fica a impressão digital no Verso (x: 62% a 92%, y: 10% a 48%)
+    let trDarkCount = 0;
+    let trTotal = 0;
+    const trXStart = Math.floor(w * 0.62);
+    const trXEnd   = Math.floor(w * 0.92);
+    const trYStart = Math.floor(h * 0.10);
+    const trYEnd   = Math.floor(h * 0.48);
+
+    for (let y = trYStart; y < trYEnd; y += 4) {
+      for (let x = trXStart; x < trXEnd; x += 4) {
+        const idx = (y * w + x) * 4;
+        const r = imgData[idx];
+        const g = imgData[idx + 1];
+        const b = imgData[idx + 2];
+        const luminance = r * 0.299 + g * 0.587 + b * 0.114;
+        trTotal++;
+        if (luminance < 70) { // pixel escuro de tinta preta
+          trDarkCount++;
+        }
+      }
+    }
+    const trDarkRatio = trTotal > 0 ? (trDarkCount / trTotal) : 0;
+
+    // 2. Amostrar região inferior-esquerda onde fica o código de barras no Verso (x: 10% a 48%, y: 72% a 92%)
+    let blTransitions = 0;
+    let blTotal = 0;
+    const blXStart = Math.floor(w * 0.10);
+    const blXEnd   = Math.floor(w * 0.48);
+    const blYStart = Math.floor(h * 0.72);
+    const blYEnd   = Math.floor(h * 0.92);
+
+    for (let y = blYStart; y < blYEnd; y += 6) {
+      let prevLum = null;
+      for (let x = blXStart; x < blXEnd; x += 3) {
+        const idx = (y * w + x) * 4;
+        const r = imgData[idx];
+        const g = imgData[idx + 1];
+        const b = imgData[idx + 2];
+        const lum = r * 0.299 + g * 0.587 + b * 0.114;
+        blTotal++;
+        if (prevLum !== null && Math.abs(lum - prevLum) > 60) {
+          blTransitions++;
+        }
+        prevLum = lum;
+      }
+    }
+    const blEdgeRatio = blTotal > 0 ? (blTransitions / blTotal) : 0;
+
+    // Se possui impressão digital concentrada no topo direito ou barras densas na base, é o VERSO
+    const isVerso = (trDarkRatio > 0.20) || (trDarkRatio > 0.14 && blEdgeRatio > 0.15) || (blEdgeRatio > 0.28);
+    return {
+      detectedSide: isVerso ? 'verso' : 'frente',
+      trDarkRatio,
+      blEdgeRatio
+    };
+  } catch (e) {
+    return { detectedSide: 'frente' };
   }
 }
 
-function captureLiveWebcam(side) {
+// ── EXECUÇÃO DO ESCANEAMENTO INTELIGENTE (BOTÃO ÚNICO) ──
+function executeSmartScanCapture() {
+  if (smartScannerStep === 'done') {
+    alert('O escaneamento da frente e do verso já está concluído! Pode submeter o formulário.');
+    return;
+  }
+
   const video = document.getElementById('scannerVideo');
   const canvas = document.getElementById('scannerCanvas');
-  if (!video || !video.videoWidth) {
-    alert('Aguarde até o vídeo carregar.');
+
+  // Se a webcam direta não estiver rodando (ex: mobile sem stream no modal), aciona a câmara nativa
+  if (!currentScannerStream || !video.videoWidth) {
+    document.getElementById('guidedNativeCameraInput').click();
     return;
   }
 
@@ -563,21 +740,195 @@ function captureLiveWebcam(side) {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+  processCapturedCanvas(canvas);
+}
+
+// Processamento unificado tanto para live webcam quanto para captura de ficheiro mobile
+function processCapturedCanvas(canvas) {
+  const analysis = analyzeBiSide(canvas);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
-  if (side === 'frente') {
+  if (smartScannerStep === 'frente') {
+    // Estamos no Passo 1: Esperamos a Frente
+    if (analysis.detectedSide === 'verso') {
+      showScannerFeedback(
+        '⚠️ Foi detetado o VERSO do documento! Por favor, aponte primeiro a FRENTE do seu Bilhete de Identidade.',
+        'warning'
+      );
+      return;
+    }
+
+    // Frente confirmada!
     document.getElementById('biFrenteBase64').value = dataUrl;
     document.getElementById('previewFrenteBox').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
-  } else {
+    document.getElementById('badgeFrenteOk').style.display = 'inline-block';
+    document.getElementById('boxPreviewFrente').style.borderColor = '#4CAF50';
+
+    // Atualiza passo para Verso
+    smartScannerStep = 'verso';
+    updateScannerUiStep();
+    showScannerFeedback(
+      '✓ Frente validada com sucesso! Agora vire o documento para o VERSO (parte de trás) e clique em Escanear Verso.',
+      'success'
+    );
+
+  } else if (smartScannerStep === 'verso') {
+    // Estamos no Passo 2: Esperamos o Verso
+    if (analysis.detectedSide === 'frente') {
+      showScannerFeedback(
+        '⚠️ O documento ainda aparenta estar de FRENTE! Por favor, vire o documento para a parte de TRÁS (Verso).',
+        'warning'
+      );
+      return;
+    }
+
+    // Verso confirmado!
     document.getElementById('biVersoBase64').value = dataUrl;
     document.getElementById('previewVersoBox').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+    document.getElementById('badgeVersoOk').style.display = 'inline-block';
+    document.getElementById('boxPreviewVerso').style.borderColor = '#4CAF50';
+
+    // Atualiza passo para Concluído
+    smartScannerStep = 'done';
+    updateScannerUiStep();
+    showScannerFeedback(
+      '✓ Verso escaneado com sucesso! Ambos os lados foram validados. Pode agora clicar em Submeter Documentos.',
+      'success'
+    );
   }
 }
 
-function closeBiVerifyModal() {
-  stopLiveWebcam();
-  document.getElementById('biVerifyModal').style.display = 'none';
+// Alternativa via câmara nativa de telemóvel
+function handleGuidedNativeFile(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.getElementById('scannerCanvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        processCapturedCanvas(canvas);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
 }
+
+function updateScannerUiStep() {
+  const stepFrente = document.getElementById('stepBadgeFrente');
+  const stepVerso  = document.getElementById('stepBadgeVerso');
+  const statusFrente = document.getElementById('stepStatusFrente');
+  const statusVerso  = document.getElementById('stepStatusVerso');
+  const btnText    = document.getElementById('btnSmartText');
+  const btnRestart = document.getElementById('btnRestartScan');
+  const guideBadge = document.getElementById('overlayGuideSideBadge');
+
+  if (smartScannerStep === 'frente') {
+    stepFrente.style.background = 'rgba(180,69,31,0.1)';
+    stepFrente.style.borderColor = 'var(--brand-terra)';
+    stepFrente.style.opacity = '1';
+    statusFrente.textContent = 'Posicione a Frente';
+    statusFrente.style.color = 'var(--brand-terra)';
+
+    stepVerso.style.background = 'var(--surface-sunken)';
+    stepVerso.style.borderColor = 'var(--border-subtle)';
+    stepVerso.style.opacity = '0.6';
+    statusVerso.textContent = 'Aguardando Frente';
+    statusVerso.style.color = 'var(--text-muted)';
+
+    btnText.textContent = 'Escanear Frente do BI';
+    guideBadge.textContent = 'ENQUADRE A FRENTE';
+    btnRestart.style.display = 'none';
+
+  } else if (smartScannerStep === 'verso') {
+    stepFrente.style.background = 'rgba(76,175,80,0.1)';
+    stepFrente.style.borderColor = '#4CAF50';
+    stepFrente.style.opacity = '1';
+    statusFrente.textContent = '✓ Frente Validada';
+    statusFrente.style.color = '#2E7D32';
+
+    stepVerso.style.background = 'rgba(31,111,107,0.12)';
+    stepVerso.style.borderColor = 'var(--brand-baia)';
+    stepVerso.style.opacity = '1';
+    statusVerso.textContent = 'Posicione o Verso';
+    statusVerso.style.color = 'var(--brand-baia)';
+
+    btnText.textContent = 'Escanear Verso do BI';
+    guideBadge.textContent = 'ENQUADRE O VERSO';
+    btnRestart.style.display = 'inline-flex';
+
+  } else if (smartScannerStep === 'done') {
+    stepVerso.style.background = 'rgba(76,175,80,0.1)';
+    stepVerso.style.borderColor = '#4CAF50';
+    stepVerso.style.opacity = '1';
+    statusVerso.textContent = '✓ Verso Validado';
+    statusVerso.style.color = '#2E7D32';
+
+    btnText.textContent = '✓ Documento Escaneado Completo';
+    guideBadge.textContent = 'DOCUMENTO COMPLETO';
+    btnRestart.style.display = 'inline-flex';
+  }
+}
+
+function showScannerFeedback(msg, type) {
+  const alertBox = document.getElementById('scannerFeedbackAlert');
+  const alertText = document.getElementById('scannerFeedbackText');
+  alertText.innerHTML = msg;
+
+  if (type === 'warning') {
+    alertBox.style.background = 'rgba(229,57,53,0.12)';
+    alertBox.style.borderColor = 'rgba(229,57,53,0.35)';
+    alertBox.style.color = '#C62828';
+  } else if (type === 'success') {
+    alertBox.style.background = 'rgba(76,175,80,0.15)';
+    alertBox.style.borderColor = 'rgba(76,175,80,0.4)';
+    alertBox.style.color = '#2E7D32';
+  } else {
+    alertBox.style.background = 'rgba(31,111,107,0.1)';
+    alertBox.style.borderColor = 'rgba(31,111,107,0.25)';
+    alertBox.style.color = 'var(--brand-baia)';
+  }
+}
+
+function resetSmartScanner() {
+  smartScannerStep = 'frente';
+  document.getElementById('biFrenteBase64').value = '';
+  document.getElementById('biVersoBase64').value = '';
+  document.getElementById('previewFrenteBox').innerHTML = 'Aguardando';
+  document.getElementById('previewVersoBox').innerHTML = 'Aguardando';
+  document.getElementById('badgeFrenteOk').style.display = 'none';
+  document.getElementById('badgeVersoOk').style.display = 'none';
+  document.getElementById('boxPreviewFrente').style.borderColor = 'var(--border-subtle)';
+  document.getElementById('boxPreviewVerso').style.borderColor = 'var(--border-subtle)';
+  updateScannerUiStep();
+  showScannerFeedback('Posicione a <strong>FRENTE</strong> do seu Bilhete de Identidade na câmara e clique no botão de escaneamento.', 'info');
+}
+
+// ── VALIDAÇÃO ANTES DA SUBMISSÃO ──
+document.getElementById('biVerifyForm').addEventListener('submit', function(e) {
+  if (isBiDuplicate) {
+    e.preventDefault();
+    alert('Atenção: O número de Bilhete de Identidade introduzido já está associado a outra conta no Djumbai. Corrija o número antes de submeter.');
+    biNumeroInput.focus();
+    return false;
+  }
+
+  if (currentBiMode === 'scanner') {
+    const f = document.getElementById('biFrenteBase64').value;
+    const v = document.getElementById('biVersoBase64').value;
+    if (!f || !v) {
+      e.preventDefault();
+      alert('Por favor, termine o escaneamento de ambos os lados (Frente e Verso) do seu Bilhete de Identidade antes de submeter.');
+      return false;
+    }
+  }
+});
 </script>
 
 <style>

@@ -7,7 +7,7 @@
 ?>
 
 <!-- Include Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/leaflet/leaflet.css" />
 
 <div class="mapa-page">
   <div class="container">
@@ -554,7 +554,7 @@
 </style>
 
 <!-- Script Leaflet JS -->
-<script nonce="<?= e(CSP_NONCE) ?>" src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="<?= BASE_URL ?>/js/leaflet/leaflet.js" nonce="<?= e(CSP_NONCE) ?>"></script>
 
 <script nonce="<?= e(CSP_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function () {

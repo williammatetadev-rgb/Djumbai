@@ -138,6 +138,7 @@ $router->get( '/perfil/definicoes',          'UserController',     'settings');
 $router->post('/perfil/definicoes',          'UserController',     'salvarSettings');
 $router->post('/perfil/alterar-senha',       'UserController',     'alterarSenha');
 $router->post('/perfil/verificacao-bi',      'UserController',     'submeterVerificacaoBi');
+$router->get( '/perfil/check-bi',            'UserController',     'checkBiDuplicado');
 $router->post('/notificacoes/{id}/ler',      'UserController',     'marcarLida');
 $router->post('/notificacoes/ler-todas',     'UserController',     'marcarTodasLidas');
 

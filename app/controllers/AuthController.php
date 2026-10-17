@@ -31,7 +31,7 @@ class AuthController extends Controller
 
     public function login(): void
     {
-        // 1. Proteção contra Brute Force (Rate Limiting)
+        // 1. Proteção contra Brute Force (Rate Limiting por IP)
         if (RateLimiter::tooManyAttempts('login', 5, 900)) {
             $seconds = RateLimiter::availableIn('login');
             $minutes = max(1, ceil($seconds / 60));
@@ -75,12 +75,27 @@ class AuthController extends Controller
             return;
         }
 
+        // 2.1 Rate limiting por identificador+IP (previne brute force distribuído por conta)
+        $userIpKey = 'login_user_' . md5(mb_strtolower($identificador, 'UTF-8') . '_' . ($_SERVER['REMOTE_ADDR'] ?? ''));
+        if (RateLimiter::tooManyAttempts($userIpKey, 8, 900)) {
+            SecurityLogger::log('RATE_LIMIT_LOGIN_USER', "Muitas tentativas de login para: {$identificador} (bloqueado por utilizador+IP).");
+            $this->render('auth/login', [
+                'titulo'       => 'Entrar – Djumbai',
+                'errors'       => [],
+                'global_error' => 'Demasiadas tentativas de acesso para esta conta. Aguarde 15 minutos antes de tentar novamente.',
+                'old'          => ['email' => $identificador],
+                'hideFooter'   => true,
+            ]);
+            return;
+        }
+
         // 3. Verificação de Credenciais por E-mail ou Telefone
         $user = $this->userModel->findByEmailOrTelefone($identificador);
 
         if (!$user || !password_verify($senha, $user['senha_hash'])) {
-            // Incrementa tentativa de força bruta
+            // Incrementa ambos os contadores de rate limiting
             RateLimiter::hit('login', 900);
+            RateLimiter::hit($userIpKey, 900);
             SecurityLogger::log('FAILED_LOGIN', "Tentativa falhada de login para: {$identificador}");
 
             $this->render('auth/login', [
@@ -114,9 +129,10 @@ class AuthController extends Controller
         // Atualiza último acesso
         $this->userModel->updateUltimoAcesso((int) $user['id']);
 
-        $_SESSION['user_id']        = (int) $user['id'];
-        $_SESSION['user_nome']      = $user['nome'];
-        $_SESSION['user_tipo']      = $user['tipo'];
+        $_SESSION['user_id']             = (int) $user['id'];
+        $_SESSION['user_nome']           = $user['nome'];
+        $_SESSION['user_tipo']           = $user['tipo'];
+        $_SESSION['session_version']     = (int) ($user['session_version'] ?? 0);
         $_SESSION['welcome_modal']  = [
             'nome' => $user['nome'],
             'tipo' => $user['tipo'],
@@ -310,6 +326,7 @@ class AuthController extends Controller
             'nome'       => $nome,
             'email'      => $email ?: null,
             'telefone'   => $telefone ?: null,
+            'bi_numero'  => !empty($_POST['bi_numero']) ? sanitizeString($_POST['bi_numero']) : null,
             'bi_frente'  => $biFrentePath ?: null,
             'bi_verso'   => $biVersoPath ?: null,
             'senha_hash' => password_hash($senha, PASSWORD_BCRYPT, ['cost' => 12]),

@@ -557,4 +557,26 @@ document.getElementById('dmFotoImg').addEventListener('error', function(){
 document.querySelectorAll('.js-dispatch-preset').forEach(s => s.addEventListener('change', function(){
   if (this.value) document.getElementById('dmNotaInput').value = this.value;
 }));
+
+// ── PESQUISA EM TEMPO REAL DE OCORRÊNCIAS ───────────────────────
+const inputBuscaProblemas = document.querySelector('input[name="q"]');
+if (inputBuscaProblemas) {
+  let searchTimer = null;
+  inputBuscaProblemas.addEventListener('input', function() {
+    const termo = this.value.trim().toLowerCase();
+    const rows = document.querySelectorAll('.problem-row');
+
+    rows.forEach(r => {
+      const txt = (r.textContent || '').toLowerCase();
+      r.style.display = (!termo || txt.includes(termo)) ? '' : 'none';
+    });
+
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      if (inputBuscaProblemas.form) {
+        inputBuscaProblemas.form.submit();
+      }
+    }, 600);
+  });
+}
 </script>

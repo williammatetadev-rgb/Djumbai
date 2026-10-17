@@ -87,6 +87,22 @@ class UserModel extends Model
     }
 
     /**
+     * Verifica se um número de BI já está registado por outro utilizador
+     */
+    public function biNumeroExistsExcept(string $biNumero, int $excludeUserId): bool
+    {
+        $biNumero = strtoupper(trim($biNumero));
+        if ($biNumero === '') {
+            return false;
+        }
+        $stmt = $this->db->prepare(
+            "SELECT COUNT(*) FROM user WHERE bi_numero = :bi AND id != :uid AND bi_numero IS NOT NULL AND bi_numero != ''"
+        );
+        $stmt->execute([':bi' => $biNumero, ':uid' => $excludeUserId]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    /**
      * Atualiza os dados pessoais do perfil do cidadão (nome, e-mail, telefone)
      */
     public function updateDadosPerfil(int $id, string $nome, string $email, string $telefone): bool
@@ -129,7 +145,13 @@ class UserModel extends Model
         if (!in_array($status, ['ativo', 'banido'], true)) {
             return false;
         }
-        $stmt = $this->db->prepare("UPDATE user SET status = :status WHERE id = :id");
+
+        // Ao banir, incrementa session_version para invalidar sessões ativas
+        if ($status === 'banido') {
+            $stmt = $this->db->prepare("UPDATE user SET status = :status, session_version = session_version + 1 WHERE id = :id");
+        } else {
+            $stmt = $this->db->prepare("UPDATE user SET status = :status WHERE id = :id");
+        }
         return $stmt->execute([':status' => $status, ':id' => $id]);
     }
 
@@ -140,8 +162,9 @@ class UserModel extends Model
     {
         $stmt = $this->db->prepare("
             SELECT
-                u.id, u.nome, u.email, u.telefone, u.bi_frente, u.bi_verso, 
-                u.bi_status, u.bi_nota, u.bi_avaliado_em,
+                u.id, u.nome, u.email, u.telefone, u.bi_numero, 
+                u.nome_completo_bi, u.data_nascimento, u.idade, u.estado_civil, u.nacionalidade,
+                u.bi_frente, u.bi_verso, u.bi_status, u.bi_nota, u.bi_avaliado_em,
                 u.tipo, u.status, u.ultimo_acesso, u.criado_em,
                 b.nome  AS bairro,
                 m.nome  AS municipio,
@@ -197,15 +220,19 @@ class UserModel extends Model
 
         $busca = trim($busca);
         if ($busca !== '') {
-            $where[] = '(u.nome LIKE :busca OR u.email LIKE :busca OR u.telefone LIKE :busca)';
-            $params[':busca'] = '%' . $busca . '%';
+            $where[] = '(u.nome LIKE :b_nome OR u.email LIKE :b_email OR u.telefone LIKE :b_tel OR u.bi_numero LIKE :b_bi)';
+            $term = '%' . $busca . '%';
+            $params[':b_nome']  = $term;
+            $params[':b_email'] = $term;
+            $params[':b_tel']   = $term;
+            $params[':b_bi']    = $term;
         }
 
         $whereClause = implode(' AND ', $where);
 
         $sql = "
             SELECT
-                u.id, u.nome, u.email, u.telefone, 
+                u.id, u.nome, u.email, u.telefone, u.bi_numero, 
                 u.bi_frente, u.bi_verso, u.bi_status, u.bi_nota, u.bi_avaliado_em,
                 u.tipo, u.status, u.ultimo_acesso, u.criado_em,
                 b.nome AS bairro_nome,
@@ -279,7 +306,9 @@ class UserModel extends Model
     {
         $stmt = $this->db->prepare("
             SELECT
-                u.id, u.nome, u.email, u.telefone, 
+                u.id, u.nome, u.email, u.telefone, u.bi_numero, 
+                u.nome_completo_bi, u.data_nascimento, u.idade, u.estado_civil, u.nacionalidade,
+                u.genero,
                 u.bi_frente, u.bi_verso, u.bi_status, u.bi_nota, u.bi_avaliado_em,
                 u.tipo, u.status, u.ultimo_acesso, u.criado_em,
                 b.nome AS bairro_nome,
@@ -407,15 +436,60 @@ class UserModel extends Model
     }
 
     /**
-     * Atualiza os documentos de identificação (BI Frente e Verso) do utilizador
+     * Atualiza os documentos de identificação (BI Frente e Verso) do utilizador e dados cívicos
      */
-    public function atualizarDocumentosBI(int $userId, string $biFrente, string $biVerso): bool
-    {
-        $stmt = $this->db->prepare("UPDATE user SET bi_frente = :frente, bi_verso = :verso, bi_status = 'pendente', bi_nota = NULL WHERE id = :id");
-        return $stmt->execute([
+    public function atualizarDocumentosBI(
+        int $userId,
+        string $biFrente,
+        string $biVerso,
+        ?string $biNumero = null,
+        array $dadosCivis = []
+    ): bool {
+        $fields = [
+            'bi_frente = :frente',
+            'bi_verso = :verso',
+            'bi_status = :status',
+            'bi_nota = NULL'
+        ];
+        $params = [
             ':frente' => $biFrente,
             ':verso'  => $biVerso,
+            ':status' => 'verificado',
             ':id'     => $userId,
-        ]);
+        ];
+
+        if ($biNumero !== null && trim($biNumero) !== '') {
+            $fields[] = 'bi_numero = :bi_num';
+            $params[':bi_num'] = strtoupper(trim($biNumero));
+        }
+
+        if (!empty($dadosCivis['nome_completo_bi'])) {
+            $fields[] = 'nome_completo_bi = :nome_bi';
+            $params[':nome_bi'] = trim($dadosCivis['nome_completo_bi']);
+        }
+        if (!empty($dadosCivis['data_nascimento'])) {
+            $fields[] = 'data_nascimento = :data_nasc';
+            $params[':data_nasc'] = $dadosCivis['data_nascimento'];
+        }
+        if (isset($dadosCivis['idade']) && (int)$dadosCivis['idade'] > 0) {
+            $fields[] = 'idade = :idade';
+            $params[':idade'] = (int)$dadosCivis['idade'];
+        }
+        if (!empty($dadosCivis['estado_civil'])) {
+            $fields[] = 'estado_civil = :est_civil';
+            $params[':est_civil'] = trim($dadosCivis['estado_civil']);
+        }
+        if (!empty($dadosCivis['nacionalidade'])) {
+            $fields[] = 'nacionalidade = :nac';
+            $params[':nac'] = trim($dadosCivis['nacionalidade']);
+        }
+        if (!empty($dadosCivis['genero'])) {
+            $fields[] = 'genero = :genero';
+            $params[':genero'] = ($dadosCivis['genero'] === 'F') ? 'F' : 'M';
+        }
+
+        $sql = "UPDATE user SET " . implode(', ', $fields) . " WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
     }
 }

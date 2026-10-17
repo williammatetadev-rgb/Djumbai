@@ -46,7 +46,7 @@
         <?php endif; ?>
         <form action="<?= url('logout') ?>" method="POST" style="display: inline; margin: 0;">
           <?= csrfField() ?>
-          <button type="submit" class="btn btn--ghost btn--sm" style="cursor: pointer;">Sair</button>
+          <button type="submit" class="js-logout-trigger btn btn--ghost btn--sm" style="cursor: pointer;">Sair</button>
         </form>
       <?php else: ?>
         <a href="<?= url('login') ?>"    class="btn btn--ghost btn--sm">Entrar</a>
@@ -70,7 +70,7 @@
       <a href="<?= url('reportar') ?>" class="btn btn--primary btn--full">Reportar Problema</a>
       <form action="<?= url('logout') ?>" method="POST" style="margin: 0; width: 100%;">
         <?= csrfField() ?>
-        <button type="submit" class="btn btn--ghost btn--full" style="cursor: pointer; width: 100%;">Terminar Sessão</button>
+        <button type="submit" class="js-logout-trigger btn btn--ghost btn--full" style="cursor: pointer; width: 100%;">Terminar Sessão</button>
       </form>
     </div>
   <?php else: ?>
@@ -83,7 +83,7 @@
         <a href="<?= url('admin') ?>"  class="btn btn--secondary btn--full">Painel Admin</a>
         <form action="<?= url('logout') ?>" method="POST" style="margin: 0; width: 100%;">
           <?= csrfField() ?>
-          <button type="submit" class="btn btn--ghost btn--full" style="cursor: pointer; width: 100%;">Terminar Sessão</button>
+          <button type="submit" class="js-logout-trigger btn btn--ghost btn--full" style="cursor: pointer; width: 100%;">Terminar Sessão</button>
         </form>
       <?php else: ?>
         <a href="<?= url('login') ?>"    class="btn btn--ghost btn--full">Entrar</a>

@@ -187,8 +187,8 @@ $rejeitados = (int) ($panorama['rejeitados'] ?? 0);
 </section>
 
 <!-- Include Leaflet CSS/JS for Home Teaser -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/leaflet/leaflet.css" />
+<script src="<?= BASE_URL ?>/js/leaflet/leaflet.js" nonce="<?= e(CSP_NONCE) ?>"></script>
 <script nonce="<?= e(CSP_NONCE) ?>">
 document.addEventListener('DOMContentLoaded', function () {
   var homeReportBtn = document.getElementById('homeReportBtn');

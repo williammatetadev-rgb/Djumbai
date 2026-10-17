@@ -344,4 +344,25 @@ document.querySelectorAll('.js-vote-auth').forEach(b => b.addEventListener('clic
   if (typeof openAuthPromptModal === 'function') openAuthPromptModal('confirmar');
   return false;
 }));
+
+// ── PESQUISA EM TEMPO REAL ──────────────────────────────────────
+const searchInputProblemas = document.querySelector('.js-search-input');
+if (searchInputProblemas) {
+  let debounceTimer = null;
+  searchInputProblemas.addEventListener('input', function() {
+    const termo = this.value.trim().toLowerCase();
+    const cards = document.querySelectorAll('.problem-card');
+    cards.forEach(c => {
+      const txt = (c.textContent || '').toLowerCase();
+      c.style.display = (!termo || txt.includes(termo)) ? '' : 'none';
+    });
+
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      if (searchInputProblemas.form) {
+        searchInputProblemas.form.submit();
+      }
+    }, 600);
+  });
+}
 </script>

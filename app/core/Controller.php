@@ -71,6 +71,30 @@ abstract class Controller
             $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'] ?? '/';
             $this->redirect('/login');
         }
+
+        // Verifica session_version para invalidar sessões de utilizadores banidos
+        // Executa no máximo 1 vez por pedido para evitar queries repetidas
+        if (!isset($GLOBALS['_session_version_checked'])) {
+            $GLOBALS['_session_version_checked'] = true;
+
+            $db = Database::getInstance();
+            $stmt = $db->prepare("SELECT session_version, status FROM user WHERE id = :id LIMIT 1");
+            $stmt->execute([':id' => (int) $_SESSION['user_id']]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row || $row['status'] === 'banido' || (int) $row['session_version'] !== (int) ($_SESSION['session_version'] ?? 0)) {
+                // Sessão invalidada — utilizador foi banido ou a versão mudou
+                session_unset();
+                session_destroy();
+                $_SESSION = [];
+                // Iniciar nova sessão para flash message
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                }
+                $_SESSION['flash_error'] = 'A sua sessão foi encerrada. A sua conta pode ter sido suspensa.';
+                $this->redirect('/login');
+            }
+        }
     }
 
     /**

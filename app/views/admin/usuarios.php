@@ -3,12 +3,12 @@
      ╚══════════════════════════════════════════════════════════╝ -->
 
 <?php
-// Contagens calculadas
-$totalExibidos = count($cidadaos);
-$totalAtivos   = count(array_filter($cidadaos, fn($u) => ($u['status'] ?? 'ativo') === 'ativo'));
-$totalBanidos  = count(array_filter($cidadaos, fn($u) => ($u['status'] ?? '') === 'banido'));
-$totalVerificados = count(array_filter($cidadaos, fn($u) => ($u['bi_status'] ?? '') === 'verificado'));
-$totalOnline   = count(array_filter($cidadaos, fn($u) => !empty($u['ultimo_acesso']) && strtotime($u['ultimo_acesso']) >= strtotime('-15 minutes')));
+// Contagens calculadas (métricas globais fornecidas pelo controller para consistência entre abas)
+$totalExibidos    = count($cidadaos);
+$totalAtivos      = count(array_filter($cidadaos, fn($u) => ($u['status'] ?? 'ativo') === 'ativo'));
+$totalBanidos     = $totalSuspensos ?? count(array_filter($cidadaos, fn($u) => ($u['status'] ?? '') === 'banido'));
+$totalVerificados = $totalVerificadosBi ?? count(array_filter($cidadaos, fn($u) => ($u['bi_status'] ?? '') === 'verificado'));
+$totalOnline      = count(array_filter($cidadaos, fn($u) => !empty($u['ultimo_acesso']) && strtotime($u['ultimo_acesso']) >= strtotime('-15 minutes')));
 
 $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
 ?>
@@ -43,9 +43,9 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
 
   /* Badge de BI Estilizados */
   .badge-bi--verificado {
-    background: rgba(46, 125, 50, 0.12);
-    color: #2E7D32;
-    border: 1px solid rgba(46, 125, 50, 0.3);
+    background: rgba(74, 222, 128, 0.15);
+    color: #166534;
+    border: 1px solid rgba(74, 222, 128, 0.5);
     padding: 2px 7px;
     border-radius: var(--radius-full);
     font-size: 10px;
@@ -179,7 +179,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
         </div>
         <div>
           <div style="font-size: 1.45rem; font-weight: 800; color: #2E7D32; line-height: 1;"><?= $totalVerificados ?></div>
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">BI Verificado (Selo Cívico)</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Verificados</div>
         </div>
       </div>
 
@@ -242,9 +242,10 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
         <div style="flex: 2; min-width: 220px;">
           <input 
             type="text" 
+            id="realTimeSearch"
             name="q" 
             value="<?= e($filtros['q']) ?>" 
-            placeholder="Pesquisar por nome, e-mail ou telefone..." 
+            placeholder="Pesquisar..." 
             class="form-input" 
             style="font-size: 12.5px; padding: 8px 12px;"
           />
@@ -356,12 +357,16 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
         $isOnline = !empty($u['ultimo_acesso']) && strtotime($u['ultimo_acesso']) >= strtotime('-15 minutes');
         $avatarBg = $isBanned ? '#B4451F' : (['#1F6F6B','#3F5A3C','#6B5A4A','#D99A1E'][crc32($u['email'] ?? $u['nome']) % 4]);
         $biStatus = $u['bi_status'] ?? 'nao_enviado';
+        $isVerified = ($biStatus === 'verificado');
       ?>
-        <div class="user-table-row js-user-row" data-id="<?= (int)$u['id'] ?>">
+        <div class="user-table-row js-user-row" 
+             data-id="<?= (int)$u['id'] ?>" 
+             data-search="<?= strtolower(e($u['nome'] . ' ' . ($u['nome_completo_bi'] ?? '') . ' ' . $u['email'] . ' ' . $u['telefone'] . ' ' . ($u['bi_numero'] ?? '') . ' ' . ($u['bairro_nome'] ?? '') . ' ' . ($u['municipio_nome'] ?? ''))) ?>"
+             title="Clique no utilizador para ver a sua ficha cívica completa">
 
           <!-- Coluna 1: Membro / BI -->
           <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 38px; height: 38px; border-radius: 50%; background: <?= $avatarBg ?>; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #FFF; flex-shrink: 0; position: relative;">
+            <div style="width: 38px; height: 38px; border-radius: 50%; background: <?= $avatarBg ?>; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #FFF; flex-shrink: 0; position: relative; <?= $isVerified ? 'box-shadow: 0 0 0 2.5px #4ADE80;' : '' ?>">
               <?= strtoupper(substr($u['nome'], 0, 1)) ?>
               <?php if ($isOnline): ?>
                 <div style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; background: #4CAF50; border: 2px solid var(--surface-card);"></div>
@@ -375,7 +380,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
                 <!-- Badge de Verificação de BI -->
                 <?php if ($biStatus === 'verificado'): ?>
                   <span class="badge-bi--verificado" title="Identidade verificada oficialmente">
-                    Selo Verificado <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    BI <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                   </span>
                 <?php elseif ($biStatus === 'pendente'): ?>
                   <span class="badge-bi--pendente" title="Aguardando validação dos documentos">
@@ -390,7 +395,7 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
                 <?php endif; ?>
               </div>
 
-              <div style="font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <div style="font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">
                 <?= e($u['email'] ?: ($u['telefone'] ?: 'Sem contacto')) ?>
               </div>
             </div>
@@ -460,6 +465,12 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
             <?php endif; ?>
 
             <?php if (($u['tipo'] ?? 'cidadao') === 'cidadao'): ?>
+              <!-- Botão Ver Ficha -->
+              <button type="button" class="js-btn-ficha btn btn--ghost btn--sm" style="font-size: 11px; padding: 5px 8px; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 4px;" title="Ver Ficha / Dossiê do Cidadão" data-id="<?= (int)$u['id'] ?>">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Ficha</span>
+              </button>
+
               <!-- Botão Aviso -->
               <button type="button" class="js-btn-warn btn btn--ghost btn--sm" style="font-size: 11px; padding: 5px 8px;" title="Enviar aviso de boas maneiras" data-id="<?= (int)$u['id'] ?>" data-nome="<?= e($u['nome']) ?>">
                 Aviso
@@ -472,12 +483,14 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
                   <?= $isBanned ? 'Reativar' : 'Suspender' ?>
                 </button>
               </form>
+            <?php else: ?>
+              <!-- Botão Ver Ficha para Membro da Equipa -->
+              <button type="button" class="js-btn-ficha btn btn--ghost btn--sm" style="font-size: 11px; padding: 5px 8px; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 4px;" title="Ver Ficha do Administrador" data-id="<?= (int)$u['id'] ?>">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Ficha</span>
+              </button>
             <?php endif; ?>
 
-            <!-- Botão Ver Ficha -->
-            <button type="button" class="js-btn-ficha btn btn--ghost btn--sm" style="font-size: 11px; padding: 5px 8px;" title="Ver ficha cívica completa" data-id="<?= (int)$u['id'] ?>">
-              Ficha ↗
-            </button>
           </div>
 
         </div>
@@ -545,18 +558,60 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
         </div>
       </div>
 
-      <!-- Documentos de Identificação (BI Angola) -->
+      <!-- Dados de Identificação Civil (Sem fotos do BI) -->
       <div style="margin-bottom: 22px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <h3 style="font-size: 12px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.6px; margin: 0;">
-            Bilhete de Identidade (BI Angola)
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 12px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.6px; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-baia)" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><line x1="15" y1="8" x2="17" y2="8"/><line x1="15" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+            Identificação Civil do Munícipe (BI Angola)
           </h3>
           <span id="dosBiStatusLabel" style="font-size: 11px; font-weight: 700;"></span>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-          <div id="dosBiFrenteContainer"></div>
-          <div id="dosBiVersoContainer"></div>
+        <div style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow-sm);">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;">
+            <div>
+              <span style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px;">Nome Completo</span>
+              <strong id="dosNomeCompletoBi" style="font-size: 13.5px; color: var(--text-primary); line-height: 1.3;">—</strong>
+            </div>
+
+            <div>
+              <span style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px;">Número do BI</span>
+              <strong id="dosBiNumero" style="font-size: 13.5px; color: var(--text-primary);">—</strong>
+            </div>
+
+            <div>
+              <span style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px;">Sexo</span>
+              <strong id="dosSexo" style="font-size: 13.5px; color: var(--text-primary);">—</strong>
+            </div>
+
+            <div>
+              <span style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px;">Idade</span>
+              <strong id="dosIdade" style="font-size: 13.5px; color: var(--text-primary);">—</strong>
+            </div>
+
+            <div>
+              <span style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px;">Estado Civil</span>
+              <strong id="dosEstadoCivil" style="font-size: 13.5px; color: var(--text-primary);">—</strong>
+            </div>
+
+            <div>
+              <span style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px;">Nacionalidade</span>
+              <strong id="dosNacionalidade" style="font-size: 13.5px; color: #2E7D32; display: inline-flex; align-items: center; gap: 4px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Angolano
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Digitalização / Fotos do Bilhete de Identidade -->
+        <div id="dosBiDocumentosBox" style="margin-top: 14px; display: none;">
+          <span style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Documentos Digitalizados (BI Oficial)</span>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div id="dosBiFrenteContainer"></div>
+            <div id="dosBiVersoContainer"></div>
+          </div>
         </div>
 
         <!-- Se houver nota de rejeição anterior -->
@@ -720,6 +775,21 @@ $listaParaExibir = ($aba === 'equipa') ? $equipa : $cidadaos;
 
 <!-- SCRIPTS DE INTERATIVIDADE -->
 <script nonce="<?= e(CSP_NONCE) ?>">
+// ── BUSCA EM TEMPO REAL ──────────────────────────────────────────
+document.getElementById('realTimeSearch')?.addEventListener('input', function(e) {
+  const term = e.target.value.toLowerCase().trim();
+  const rows = document.querySelectorAll('.js-user-row');
+  
+  rows.forEach(row => {
+    const text = row.getAttribute('data-search') || '';
+    if (text.includes(term)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+});
+
 const warnPresets = {
   1: "Estimado(a) morador(a), pedimos a gentileza de manter o respeito e linguagem cordial ao interagir com outros membros da comunidade na plataforma Djumbai.",
   2: "Estimado(a) morador(a), solicitamos que verifique com atenção a localização exata e o ponto de referência ao submeter novas ocorrências no seu bairro.",
@@ -768,6 +838,8 @@ function fecharNovoAdminModal() {
 
 // ── DOSSIÊ DINÂMICO DO UTILIZADOR ────────────────────────────────
 function carregarDossie(userId) {
+  if (!userId) return;
+
   fetch('<?= url("admin/usuarios/") ?>' + userId + '/dossie')
     .then(res => res.json())
     .then(data => {
@@ -784,56 +856,120 @@ function carregarDossie(userId) {
 
 function preencherDossieModal(u) {
   document.getElementById('dosNome').textContent = u.nome || '—';
-  document.getElementById('dosScore').textContent = u.reputacao_score || 50;
+  document.getElementById('dosScore').textContent = (u.reputacao_score !== undefined && u.reputacao_score !== null) ? u.reputacao_score : 50;
   document.getElementById('dosEmail').textContent = u.email || 'Não associado';
   document.getElementById('dosTelefone').textContent = u.telefone || 'Não associado';
   document.getElementById('dosLocal').textContent = (u.bairro_nome || '—') + (u.municipio_nome ? (', ' + u.municipio_nome) : '');
   document.getElementById('dosCriadoEm').textContent = u.criado_em ? u.criado_em.substring(0, 10) : '—';
 
-  // Selo Cívico Badge
+  // Badge de Status do Documento & Label
   const seloBox = document.getElementById('dosSeloBadge');
+  const biStatusLabel = document.getElementById('dosBiStatusLabel');
+
   if (u.bi_status === 'verificado') {
-    seloBox.innerHTML = '<span class="badge-bi--verificado" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:6px 12px;">Selo Cívico Verificado <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>';
+    seloBox.innerHTML = '<span class="badge-bi--verificado" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:6px 12px;">BI <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>';
+    if (biStatusLabel) {
+      biStatusLabel.textContent = 'Verificado';
+      biStatusLabel.style.color = '#2E7D32';
+    }
   } else if (u.bi_status === 'pendente') {
     seloBox.innerHTML = '<span class="badge-bi--pendente" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:6px 12px;">Validação Pendente <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>';
+    if (biStatusLabel) {
+      biStatusLabel.textContent = 'Aguardando Validação';
+      biStatusLabel.style.color = '#8C6211';
+    }
   } else if (u.bi_status === 'rejeitado') {
     seloBox.innerHTML = '<span class="badge-bi--rejeitado" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:6px 12px;">Documento Recusado <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>';
+    if (biStatusLabel) {
+      biStatusLabel.textContent = 'Recusado';
+      biStatusLabel.style.color = 'var(--brand-terra)';
+    }
   } else {
     seloBox.innerHTML = '<span class="badge-bi--nao-enviado" style="font-size:12px;padding:6px 12px;">Sem BI Submetido</span>';
+    if (biStatusLabel) {
+      biStatusLabel.textContent = 'Sem Documento';
+      biStatusLabel.style.color = 'var(--text-muted)';
+    }
   }
 
-  // BI Images
+  // Preenchimento dos Dados Cívicos de Identificação
+  document.getElementById('dosNomeCompletoBi').textContent = u.nome_completo_bi || u.nome || '—';
+  
+  const biNumEl = document.getElementById('dosBiNumero');
+  if (biNumEl) biNumEl.textContent = u.bi_numero || 'Não indicado';
+
+  // Sexo e Nacionalidade coerentes com o BI
+  // Se o sexo for masculino será Angolano, se for feminino Angolana
+  let generoCode = 'M';
+  if (u.genero) {
+    generoCode = u.genero.toUpperCase();
+  } else if (u.nacionalidade && u.nacionalidade.toLowerCase() === 'angolana') {
+    generoCode = 'F';
+  } else if (u.estado_civil && (u.estado_civil.toLowerCase().includes('solteira') || u.estado_civil.toLowerCase().includes('casada') || u.estado_civil.toLowerCase().includes('divorciada') || u.estado_civil.toLowerCase().includes('viúva'))) {
+    generoCode = 'F';
+  }
+
+  const isFeminino = (generoCode === 'F');
+  const sexoTexto = isFeminino ? 'Feminino' : 'Masculino';
+  const nacionalidadeTexto = isFeminino ? 'Angolana' : 'Angolano';
+
+  const dosSexoEl = document.getElementById('dosSexo');
+  if (dosSexoEl) {
+    dosSexoEl.textContent = sexoTexto;
+  }
+  document.getElementById('dosNacionalidade').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ${nacionalidadeTexto}`;
+
+  let idadeTxt = '—';
+  if (u.idade && parseInt(u.idade) > 0) {
+    idadeTxt = u.idade + ' anos';
+  } else if (u.data_nascimento) {
+    const anos = Math.floor((new Date() - new Date(u.data_nascimento)) / (365.25 * 24 * 3600 * 1000));
+    if (!isNaN(anos) && anos > 0) idadeTxt = anos + ' anos';
+  }
+  document.getElementById('dosIdade').textContent = idadeTxt;
+  document.getElementById('dosEstadoCivil').textContent = u.estado_civil || 'Solteiro(a)';
+
+  // Visualização das fotos do BI (Frente e Verso)
+  const docsBox = document.getElementById('dosBiDocumentosBox');
   const frenteCont = document.getElementById('dosBiFrenteContainer');
   const versoCont = document.getElementById('dosBiVersoContainer');
 
-  if (u.bi_frente) {
-    const urlFrente = '<?= url("admin/usuarios/") ?>' + u.id + '/documento/frente';
-    frenteCont.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Frente do BI</div>
-      <a href="${urlFrente}" target="_blank" style="display:block;border-radius:8px;overflow:hidden;border:1px solid var(--border-subtle);background:#000;">
-        <img src="${urlFrente}" alt="BI Frente" style="width:100%;height:130px;object-fit:cover;display:block;">
-      </a>
-    `;
-  } else {
-    frenteCont.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Frente do BI</div>
-      <div style="height:130px;border-radius:8px;background:var(--surface-sunken);border:1px dashed var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;">Não submetido</div>
-    `;
-  }
+  if (docsBox && frenteCont && versoCont) {
+    if (u.bi_frente || u.bi_verso) {
+      docsBox.style.display = 'block';
 
-  if (u.bi_verso) {
-    const urlVerso = '<?= url("admin/usuarios/") ?>' + u.id + '/documento/verso';
-    versoCont.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Verso do BI</div>
-      <a href="${urlVerso}" target="_blank" style="display:block;border-radius:8px;overflow:hidden;border:1px solid var(--border-subtle);background:#000;">
-        <img src="${urlVerso}" alt="BI Verso" style="width:100%;height:130px;object-fit:cover;display:block;">
-      </a>
-    `;
-  } else {
-    versoCont.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Verso do BI</div>
-      <div style="height:130px;border-radius:8px;background:var(--surface-sunken);border:1px dashed var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;">Não submetido</div>
-    `;
+      if (u.bi_frente) {
+        const urlFrente = '<?= url("admin/usuarios/") ?>' + u.id + '/documento/frente';
+        frenteCont.innerHTML = `
+          <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Frente do BI</div>
+          <a href="${urlFrente}" target="_blank" title="Clique para ampliar o documento" style="display:block;border-radius:8px;overflow:hidden;border:1px solid var(--border-subtle);background:#000;box-shadow:var(--shadow-sm);transition:opacity 0.2s;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='1'">
+            <img src="${urlFrente}" alt="BI Frente" style="width:100%;height:110px;object-fit:cover;display:block;">
+          </a>
+        `;
+      } else {
+        frenteCont.innerHTML = `
+          <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Frente do BI</div>
+          <div style="height:110px;border-radius:8px;background:var(--surface-sunken);border:1px dashed var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;">Não submetido</div>
+        `;
+      }
+
+      if (u.bi_verso) {
+        const urlVerso = '<?= url("admin/usuarios/") ?>' + u.id + '/documento/verso';
+        versoCont.innerHTML = `
+          <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Verso do BI</div>
+          <a href="${urlVerso}" target="_blank" title="Clique para ampliar o documento" style="display:block;border-radius:8px;overflow:hidden;border:1px solid var(--border-subtle);background:#000;box-shadow:var(--shadow-sm);transition:opacity 0.2s;" onmouseenter="this.style.opacity='0.9'" onmouseleave="this.style.opacity='1'">
+            <img src="${urlVerso}" alt="BI Verso" style="width:100%;height:110px;object-fit:cover;display:block;">
+          </a>
+        `;
+      } else {
+        versoCont.innerHTML = `
+          <div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Verso do BI</div>
+          <div style="height:110px;border-radius:8px;background:var(--surface-sunken);border:1px dashed var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:11px;">Não submetido</div>
+        `;
+      }
+    } else {
+      docsBox.style.display = 'none';
+    }
   }
 
   // Nota de rejeição
@@ -880,17 +1016,32 @@ function fecharDossieModal() {
 
 // ── EVENT BINDINGS (CSP-compliant) ───────────────────────────────
 document.querySelectorAll('.js-btn-novo-admin').forEach(b => b.addEventListener('click', abrirNovoAdminModal));
-document.querySelectorAll('.js-user-row').forEach(r => r.addEventListener('click', function(){ carregarDossie(this.dataset.id); }));
-document.querySelectorAll('.js-row-actions').forEach(el => el.addEventListener('click', function(e){ e.stopPropagation(); }));
-document.querySelectorAll('.js-btn-rejeitar-bi').forEach(b => b.addEventListener('click', function(){ abrirRejeitarBiModal(this.dataset.id, this.dataset.nome); }));
-document.querySelectorAll('.js-btn-warn').forEach(b => b.addEventListener('click', function(){ openWarnModal(this.dataset.id, this.dataset.nome); }));
-document.querySelectorAll('.js-btn-ficha').forEach(b => b.addEventListener('click', function(){ carregarDossie(this.dataset.id); }));
+document.querySelectorAll('.js-user-row').forEach(r => r.addEventListener('click', function(e) {
+  // Ignorar clique se foi em botões de ação ou links
+  if (e.target.closest('.js-row-actions') || e.target.closest('button') || e.target.closest('a') || e.target.closest('form')) {
+    return;
+  }
+  carregarDossie(this.dataset.id);
+}));
+document.querySelectorAll('.js-row-actions').forEach(el => el.addEventListener('click', function(e) { e.stopPropagation(); }));
+document.querySelectorAll('.js-btn-ficha').forEach(b => b.addEventListener('click', function(e) {
+  e.stopPropagation();
+  carregarDossie(this.dataset.id);
+}));
+document.querySelectorAll('.js-btn-rejeitar-bi').forEach(b => b.addEventListener('click', function(e) {
+  e.stopPropagation();
+  abrirRejeitarBiModal(this.dataset.id, this.dataset.nome);
+}));
+document.querySelectorAll('.js-btn-warn').forEach(b => b.addEventListener('click', function(e) {
+  e.stopPropagation();
+  openWarnModal(this.dataset.id, this.dataset.nome);
+}));
 document.querySelectorAll('.js-close-dossie').forEach(b => b.addEventListener('click', fecharDossieModal));
 document.querySelectorAll('.js-close-rejeitar-bi').forEach(b => b.addEventListener('click', fecharRejeitarBiModal));
-document.querySelectorAll('.js-preset-motivo').forEach(b => b.addEventListener('click', function(){ preencherMotivo(this.dataset.motivo); }));
+document.querySelectorAll('.js-preset-motivo').forEach(b => b.addEventListener('click', function() { preencherMotivo(this.dataset.motivo); }));
 document.querySelectorAll('.js-close-novo-admin').forEach(b => b.addEventListener('click', fecharNovoAdminModal));
 document.querySelectorAll('.js-close-warn').forEach(b => b.addEventListener('click', closeWarnModal));
-document.querySelectorAll('.js-warn-preset').forEach(b => b.addEventListener('click', function(){ useWarnPreset(this.dataset.preset); }));
+document.querySelectorAll('.js-warn-preset').forEach(b => b.addEventListener('click', function() { useWarnPreset(this.dataset.preset); }));
 
 // Fechar com clique fora
 document.querySelectorAll('.modal-overlay').forEach(modal => {
@@ -900,4 +1051,36 @@ document.querySelectorAll('.modal-overlay').forEach(modal => {
     }
   });
 });
+
+// ── PESQUISA EM TEMPO REAL (SEM NECESSIDADE DE SUBMETER) ─────────
+const inputBuscaUsuarios = document.querySelector('input[name="q"]');
+if (inputBuscaUsuarios) {
+  inputBuscaUsuarios.addEventListener('input', function() {
+    const termo = this.value.trim().toLowerCase();
+    const rows = document.querySelectorAll('.js-user-row');
+    let encontrou = 0;
+
+    rows.forEach(r => {
+      const conteudoBusca = (r.dataset.search || r.textContent).toLowerCase();
+      if (!termo || conteudoBusca.includes(termo)) {
+        r.style.display = '';
+        encontrou++;
+      } else {
+        r.style.display = 'none';
+      }
+    });
+
+    let msgVazia = document.getElementById('jsUserEmptySearch');
+    if (!msgVazia && rows.length > 0) {
+      msgVazia = document.createElement('div');
+      msgVazia.id = 'jsUserEmptySearch';
+      msgVazia.style.cssText = 'text-align:center;padding:50px 20px;color:var(--text-muted);font-size:13.5px;font-weight:600;display:none;';
+      msgVazia.innerHTML = '<div style="font-size:24px;margin-bottom:8px;">🔍</div>Nenhum utilizador encontrado com este termo.';
+      rows[0].parentNode.appendChild(msgVazia);
+    }
+    if (msgVazia) {
+      msgVazia.style.display = (encontrou === 0 && rows.length > 0) ? 'block' : 'none';
+    }
+  });
+}
 </script>

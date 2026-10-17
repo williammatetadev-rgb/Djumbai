@@ -285,16 +285,74 @@ class UserController extends Controller
             $this->redirect('/perfil/definicoes');
         }
 
-        $this->userModel->atualizarDocumentosBI($userId, $biFrentePath, $biVersoPath);
+        $biNumero = sanitizeString($_POST['bi_numero'] ?? '');
+        $biNumero = strtoupper(trim($biNumero));
 
-        SecurityLogger::log('USER_BI_VERIFIED', "Utilizador #{$userId} submeteu documentos de BI para verificação", [
+        if (!empty($biNumero)) {
+            if ($this->userModel->biNumeroExistsExcept($biNumero, $userId)) {
+                flash('error', 'Aviso de Verificação: O número de Bilhete de Identidade informado já se encontra registado e associado a outra conta.');
+                $this->redirect('/perfil/definicoes');
+            }
+        }
+
+        $dadosCivis = [];
+        if (!empty($_POST['nome_completo_bi'])) {
+            $dadosCivis['nome_completo_bi'] = sanitizeString($_POST['nome_completo_bi']);
+        }
+        if (!empty($_POST['data_nascimento'])) {
+            $dadosCivis['data_nascimento'] = sanitizeString($_POST['data_nascimento']);
+            $nasc = DateTime::createFromFormat('Y-m-d', $dadosCivis['data_nascimento']);
+            if ($nasc) {
+                $hoje = new DateTime();
+                $dadosCivis['idade'] = $hoje->diff($nasc)->y;
+            }
+        } elseif (!empty($_POST['idade'])) {
+            $dadosCivis['idade'] = (int)$_POST['idade'];
+        }
+        if (!empty($_POST['estado_civil'])) {
+            $dadosCivis['estado_civil'] = sanitizeString($_POST['estado_civil']);
+        }
+        if (!empty($_POST['nacionalidade'])) {
+            $dadosCivis['nacionalidade'] = sanitizeString($_POST['nacionalidade']);
+        }
+        if (!empty($_POST['genero']) || !empty($_POST['sexo'])) {
+            $sexoRaw = strtoupper(trim($_POST['genero'] ?? $_POST['sexo'] ?? ''));
+            $dadosCivis['genero'] = in_array($sexoRaw, ['F', 'FEMININO', 'FEM']) ? 'F' : 'M';
+            $dadosCivis['nacionalidade'] = ($dadosCivis['genero'] === 'F') ? 'Angolana' : 'Angolano';
+        }
+
+        $this->userModel->atualizarDocumentosBI($userId, $biFrentePath, $biVersoPath, $biNumero, $dadosCivis);
+
+        SecurityLogger::log('USER_BI_VERIFIED', "Utilizador #{$userId} concluiu verificação com BI", [
             'user_id'   => $userId,
+            'bi_numero' => $biNumero,
             'bi_frente' => $biFrentePath,
             'bi_verso'  => $biVersoPath,
         ]);
 
-        flash('success', 'Verificação do Bilhete de Identidade concluída com sucesso! Agora já pode reportar ocorrências.');
+        flash('success', 'Verificação do Bilhete de Identidade concluída com sucesso! O seu perfil foi verificado.');
         $this->redirect('/perfil/definicoes');
+    }
+
+    /**
+     * Endpoint AJAX para validação instantânea de BI duplicado
+     */
+    public function checkBiDuplicado(): void
+    {
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $bi = sanitizeString($_GET['bi'] ?? '');
+        $bi = strtoupper(trim($bi));
+
+        if (empty($bi)) {
+            $this->json(['duplicado' => false]);
+            return;
+        }
+
+        $duplicado = $this->userModel->biNumeroExistsExcept($bi, $userId);
+        $this->json([
+            'duplicado' => $duplicado,
+            'mensagem'  => $duplicado ? 'Aviso: Este número de Bilhete de Identidade já está associado a outra conta.' : ''
+        ]);
     }
 
     /**

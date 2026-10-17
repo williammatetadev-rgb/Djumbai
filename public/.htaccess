@@ -1,13 +1,15 @@
 # Apache — Djumbai URL Rewriting
 # Redireciona todos os pedidos para public/index.php (Front Controller)
 
-# Desativa método HTTP TRACE (previne XST - Cross-Site Tracing)
-TraceEnable Off
-
 Options -Indexes
 Options -MultiViews
 
 RewriteEngine On
+
+# Desativa método HTTP TRACE/TRACK (previne XST - Cross-Site Tracing)
+# Nota: 'TraceEnable Off' só é válido em httpd.conf do Apache, não em arquivos .htaccess.
+RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK) [NC]
+RewriteRule .* - [F,L]
 
 # Não reescreve ficheiros e pastas que realmente existem (CSS, JS, imagens)
 RewriteCond %{REQUEST_FILENAME} !-f

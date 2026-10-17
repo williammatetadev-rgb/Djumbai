@@ -3,8 +3,8 @@
 ?>
 
 <!-- ═══ MODAL DE CONFIRMAÇÃO DE LOGOUT ═══════════════════════════ -->
-<div id="djumbaiLogoutModal" style="display:none;position:fixed;z-index:99999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);">
-  <div style="background:#fff;margin:15% auto;padding:28px 24px;width:90%;max-width:380px;border-radius:14px;text-align:center;animation:lm_fade 0.3s cubic-bezier(0.16,1,0.3,1);position:relative;box-shadow:0 20px 40px rgba(0,0,0,0.25);border:1px solid #eee;">
+<div id="djumbaiLogoutModal" style="display:none;position:fixed;z-index:99999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:#fff;margin:auto;padding:28px 24px;width:90%;max-width:380px;border-radius:14px;text-align:center;animation:lm_fade 0.3s cubic-bezier(0.16,1,0.3,1);position:relative;box-shadow:0 20px 40px rgba(0,0,0,0.25);border:1px solid #eee;">
 
     <div style="width:52px;height:52px;border-radius:50%;background:rgba(180,69,31,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-terra)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -42,11 +42,18 @@
 
 <script nonce="<?= e(CSP_NONCE) ?>">
 function executarLogout() {
-  document.getElementById('djumbaiLogoutForm').submit();
+  var f = document.getElementById('djumbaiLogoutForm');
+  if (f) f.submit();
+}
+
+function openDjumbaiLogoutModal() {
+  var m = document.getElementById('djumbaiLogoutModal');
+  if (m) m.style.display = 'flex';
 }
 
 function closeDjumbaiLogoutModal() {
-  document.getElementById('djumbaiLogoutModal').style.display = 'none';
+  var m = document.getElementById('djumbaiLogoutModal');
+  if (m) m.style.display = 'none';
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -56,18 +63,39 @@ document.addEventListener('DOMContentLoaded', function () {
   if (confirmBtn) confirmBtn.addEventListener('click', executarLogout);
 
   var logoutUrl = '<?= url('logout') ?>';
-  document.querySelectorAll('a[href="' + logoutUrl + '"]').forEach(function (link) {
+
+  // 1. Intercetar links para logout
+  document.querySelectorAll('a[href="' + logoutUrl + '"], a[href*="/logout"]').forEach(function (link) {
     link.addEventListener('click', function (e) {
-      // Ignorar se o link estiver dentro do modal de logout
       if (link.closest('#djumbaiLogoutModal')) return;
       e.preventDefault();
-      document.getElementById('djumbaiLogoutModal').style.display = 'block';
+      openDjumbaiLogoutModal();
     });
   });
-});
 
-// Fechar ao clicar no fundo escuro
-document.getElementById('djumbaiLogoutModal').addEventListener('click', function (e) {
-  if (e.target === this) closeDjumbaiLogoutModal();
+  // 2. Intercetar formulários de logout
+  document.querySelectorAll('form[action="' + logoutUrl + '"], form[action*="/logout"]').forEach(function (form) {
+    if (form.id === 'djumbaiLogoutForm') return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      openDjumbaiLogoutModal();
+    });
+  });
+
+  // 3. Intercetar botões com gatilho explícito
+  document.querySelectorAll('.js-logout-trigger, [data-action="logout"]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      openDjumbaiLogoutModal();
+    });
+  });
+
+  // Fechar ao clicar no fundo escuro
+  var modalEl = document.getElementById('djumbaiLogoutModal');
+  if (modalEl) {
+    modalEl.addEventListener('click', function (e) {
+      if (e.target === this) closeDjumbaiLogoutModal();
+    });
+  }
 });
 </script>

@@ -39,13 +39,12 @@ class SecurityHeaders
         if ($nonce !== '') {
             $scriptSrc .= " 'nonce-{$nonce}'";
         }
-        $scriptSrc .= " https://unpkg.com https://cdn.jsdelivr.net";
 
         $csp = [
             "default-src 'self'",
             $scriptSrc,
-            "style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
-            "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://unpkg.com https://cdn.jsdelivr.net",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: blob: https://*.tile.openstreetmap.org",
             "font-src 'self'",
             "connect-src 'self' https://*.tile.openstreetmap.org",
             "media-src 'self'",
